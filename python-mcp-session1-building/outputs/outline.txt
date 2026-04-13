@@ -1,0 +1,29 @@
+1. Series title slide listing the three December sessions on building, deploying, and securing MCP servers.
+2. Session title slide introducing Pamela Fox and the link to the server-building slide deck.
+3. Agenda slide covering MCP basics, FastMCP server construction, VS Code usage, debugging, observability, and AI agents.
+4. Follow-along slide pointing viewers to the sample GitHub repository and README instructions.
+5. Section divider that starts the explanation of what MCP is.
+6. Diagram showing the pre-MCP world where a single AI app needs separate integrations to each service.
+7. Definition slide describing MCP as an open protocol for connecting models to tools, data, and applications.
+8. Diagram showing how MCP replaces custom point-to-point integrations with one standard protocol layer.
+9. Architecture diagram separating MCP hosts and clients from MCP servers that expose tools, prompts, and resources.
+10. Slide highlighting the growing set of MCP clients and linking to the feature support matrix.
+11. VS Code slide showing that GitHub Copilot acts as a fully compliant MCP client and can consume installed servers.
+12. Comparison table defining tools, resources, and prompts and who controls each component.
+13. Section divider that introduces building an MCP server in Python.
+14. Framework comparison slide contrasting the official Python SDK with FastMCP.
+15. Feature list explaining why FastMCP is convenient for Python developers.
+16. Step-by-step slide showing how to configure, start, and enable a local FastMCP server in VS Code.
+17. Code slide defining a FastMCP tool with typed and annotated arguments for expense logging.
+18. Code slide defining a FastMCP resource that exposes expense data as contextual text.
+19. Code slide defining a FastMCP prompt that asks the model to analyze spending patterns.
+20. Table comparing stdio and HTTP transports across startup mode, use cases, advantages, and limitations.
+21. Configuration slide showing how to run the same FastMCP server over HTTP and register it in mcp.json.
+22. Section divider introducing development tips for MCP servers.
+23. Debugging slide showing how to launch a stdio server under debugpy and attach the VS Code debugger.
+24. Tooling slide introducing MCP Inspector as a direct UI for testing and debugging MCP servers.
+25. Observability slide showing Aspire dashboard running in Docker and receiving structured MCP logs and traces.
+26. Section divider that introduces AI agents consuming MCP servers.
+27. Code slide showing Microsoft agent-framework connecting to a local MCP server over Streamable HTTP.
+28. Code slide showing LangChain v1 loading tools from a local MCP server and invoking an agent with them.
+29. Closing slide listing recordings, office hours, beginner resources, and the remaining sessions in the series.

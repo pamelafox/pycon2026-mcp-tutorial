@@ -1,0 +1,30 @@
+This session covers how to add authentication to MCP servers in Python. It explores three approaches to restricting access: private networks, key-based access, and OAuth-based access. The bulk of the session focuses on OAuth 2.1 flows for MCP including PRM, CIMD, DCR, and integration demos with Keycloak and Microsoft Entra.
+
+00:00 - Introduction and series overview
+01:01 - Presenter introduction
+02:36 - Restricting access to MCP servers
+03:08 - MCP architecture recap
+04:02 - Three approaches: private networks, keys, OAuth
+06:21 - Key-based access flow
+07:30 - Using Tavily MCP server with a key in VS Code
+11:27 - Using key-based MCP server from a programmatic agent
+14:48 - Building your own key-based MCP server on Azure
+16:38 - Deploying Azure Functions with key access
+20:25 - OAuth-based access overview
+21:45 - OAuth 2.1 entities and roles
+23:55 - Simplified OAuth flow for MCP
+27:04 - Protected Resource Metadata (PRM) discovery
+30:28 - Authorization server metadata discovery
+32:19 - Client registration: CIMD vs DCR
+35:18 - Client ID Metadata Document (CIMD)
+38:33 - Dynamic Client Registration (DCR)
+40:47 - Authorization provider support comparison
+43:19 - FastMCP OAuth provider classes
+44:49 - Remote OAuth with full DCR support (ScaleKit example)
+45:40 - Keycloak: open-source identity server integration
+47:01 - Deploying and demoing Keycloak authentication
+54:02 - Entra via OAuth Proxy
+55:00 - Integrating Entra with FastMCP server
+55:52 - Demo: Entra authentication flow
+59:06 - Alternative: pre-registered client IDs
+01:00:03 - Wrap-up and next steps

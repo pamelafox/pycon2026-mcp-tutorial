@@ -1,0 +1,1458 @@
+[00:06] Hey everyone, thank you for joining us
+[00:08] for the next session of our Python and
+[00:10] MCP from local to production series. My
+[00:13] name is Anna. I'll be your producer for
+[00:15] this session. I'm an event planner for
+[00:18] Reactor joining you from Renman,
+[00:19] Washington.
+[00:21] Before we start, I do have some quick
+[00:23] housekeeping.
+[00:24] Please take a moment to review our code
+[00:26] of conduct.
+[00:28] We seek to provide a respectful
+[00:30] environment for both our audience and
+[00:32] presenters.
+[00:34] While we absolutely encourage engagement
+[00:35] in the chat, we ask that you please be
+[00:38] mindful of your commentary. Remain
+[00:39] professional and on topic.
+[00:42] Keep an eye on that chat. We'll be
+[00:44] dropping helpful links and checking for
+[00:46] questions for our moderator to answer.
+[00:48] Our session is being recorded. It'll be
+[00:51] available to view on demand right here
+[00:52] on the Reactor channel.
+[00:55] With that, I'll turn it over to our
+[00:57] presenter for today, Pamela. Thanks so
+[00:59] much for joining us.
+[01:01] >> Hello everyone. Welcome to our Python
+[01:04] MCP series.
+[01:06] Don't need headphones. So, we are doing
+[01:09] this three-part series. This is part
+[01:12] three of the series. Uh we already
+[01:14] covered how to build MCP servers in
+[01:17] Python using FastMPP and running them
+[01:21] locally. And then on our second session,
+[01:23] we deployed them to Azure container apps
+[01:26] and even put them inside a private
+[01:28] network to show how we can do that. If
+[01:30] you missed those two sessions, they're
+[01:32] all recorded on YouTube and all the code
+[01:34] and slides is available so you can catch
+[01:37] up with anything you missed. Today is
+[01:40] our third part of the series and it is
+[01:43] the final part and we thank every all of
+[01:46] you for joining so far in the series.
+[01:50] Today we're going to be talking about
+[01:51] how we can take our MCP servers and add
+[01:54] authentication to them. And we're going
+[01:56] to look at a few different ways of doing
+[01:58] authentication that we think will be the
+[02:00] most helpful for all of you. Now, if you
+[02:03] want to, you can download these slides
+[02:05] and follow along with them. We'll share
+[02:07] the link in the chat and uh yeah, you
+[02:10] can follow along, you can share the
+[02:12] slides, you can regse slides to you know
+[02:15] your friends, family, colleagues,
+[02:16] whoever uh whatever you want to do with
+[02:18] them. Uh, if you haven't met me before,
+[02:21] my name is Pamela Fox. I'm a Python
+[02:23] cloud advocate at Microsoft, which means
+[02:25] my job is figuring out how to make
+[02:27] things work with Python. And these days,
+[02:29] that's all about making generative AI
+[02:31] technologies work with Python. And it's
+[02:33] a pretty fun job.
+[02:36] All right, so let's dig in for today's
+[02:40] topic. And I know a lot of us are very
+[02:42] excited about this topic because it can
+[02:45] really make our MCP servers more
+[02:46] powerful when we're able to have uh
+[02:49] authentication layers. So we're going to
+[02:51] be talking about different ways of
+[02:52] restricting access to MCP servers. We'll
+[02:54] look at keybased access and then we'll
+[02:56] really spend a lot of our time on ooth
+[02:58] based access because that's where things
+[03:00] get very interesting. Uh we're going to
+[03:02] demo a keycloak integration and then
+[03:04] also an Entra integration.
+[03:08] So first just generally how do we
+[03:11] restrict access to our MCP servers?
+[03:17] Now remember uh overall this is our MCP
+[03:20] architecture, right? We've got these MCP
+[03:22] servers that we're building and you know
+[03:24] we're uh you know hosting them on on
+[03:27] some machine somewhere in the cloud and
+[03:29] these MCP servers expose tools and they
+[03:32] might also have prompts and resources,
+[03:34] right? But mostly they're exposing a lot
+[03:36] of tools. And then we've got MCP clients
+[03:39] that interact with these servers. Now
+[03:40] these clients might be, you know, like
+[03:43] uh desktop applications like GitHub
+[03:45] Copilot or Cloud Desktop. Uh the clients
+[03:47] could also be agents that we're writing
+[03:49] ourselves, right? Maybe an agent written
+[03:51] with link chain or agent framework,
+[03:53] right? Uh so these are you know the
+[03:55] clients using the MCB protocol in order
+[03:58] to get responses back from those
+[04:00] servers.
+[04:02] Now we may want to restrict which
+[04:05] clients can access which servers. So
+[04:08] what mechanisms do we have to restrict
+[04:11] that? So I would say there's three
+[04:15] primary approaches. Uh the first one is
+[04:17] that we can simply make sure that our
+[04:19] MCP server is not publicly accessible,
+[04:22] right? That if you try to reach that
+[04:24] URL, you will just, you know, get get
+[04:27] kicked out, get a 404, a 401, whatever.
+[04:30] you just can't reach that URL. And we
+[04:33] talked about that in yesterday's session
+[04:35] is how we can deploy our MCP servers
+[04:38] inside private networks and disable
+[04:42] public ingress to that network. So that
+[04:44] is definitely an option especially if
+[04:46] you're developing MCP servers solely for
+[04:49] internal use.
+[04:51] However, you might be developing servers
+[04:53] that uh you do want the URLs to be
+[04:55] publicly available, but you want to make
+[04:57] sure that whoever is using them is
+[04:59] allowed to use that server, right? So,
+[05:02] the first thing you might consider is
+[05:03] using keybased access. So, here you give
+[05:07] out keys to your server and you say,
+[05:09] hey, as long as you have a key, you can
+[05:11] get into the server, right? So then that
+[05:13] means you need some way of creating keys
+[05:16] granting keys some way of verifying that
+[05:19] you know that key is correct and looking
+[05:22] up in your system and say like oh this
+[05:23] user has this key okay you can use the
+[05:25] server so that's a very popular way of
+[05:28] gating access to uh to MCP servers
+[05:32] and then what gets really interesting is
+[05:34] when you do ooth based access so here
+[05:36] you say okay I want only certain sets of
+[05:40] users to be able to access this server
+[05:42] and when they access my server I
+[05:44] actually want to know who they are and
+[05:46] I'm going to restrict what they can
+[05:49] access based off who they are and so
+[05:51] here we can actually use the OOTH spec
+[05:54] the OOTH 2.1 flow in order to have an
+[05:58] MCP client authenticate a user and then
+[06:03] give that MCP server uh access to you
+[06:06] know the OOTH tokens and then use that
+[06:08] to decide what data it's going to send
+[06:10] back and you do flows on behalf of that
+[06:14] user. And so that's a really interesting
+[06:17] uh approach that we can use.
+[06:21] So first let's talk about keybased
+[06:23] access because that is a simpler way of
+[06:26] restricting access and and can
+[06:28] potentially be what you need.
+[06:31] So what does this actually look like
+[06:32] with the MCP protocol? Um right. So
+[06:34] remember we've got our MCP client, we've
+[06:36] got our MCP server. So the MCP client is
+[06:39] going to communicate to the MCP server.
+[06:42] Here it's sending a post to the SLMCP
+[06:44] endpoint and in that post it's including
+[06:48] some headers and oftentimes we put the
+[06:51] key in the header. Right? So in this
+[06:52] case I have a header here that says oh
+[06:54] the API key is you know ABC1D3 that gets
+[06:58] sent to the MCP server and the server
+[07:00] says oh okay I know that key that is a
+[07:02] valid key therefore I will respond and
+[07:07] uh you know call that tool for you right
+[07:10] so that's basically how it's going to
+[07:12] work now there's many places ways you
+[07:14] can specify keys some people put keys in
+[07:17] query parameters some people put them in
+[07:19] headers sometimes they put them in the
+[07:20] header bearer token Lots of places you
+[07:23] can put the key but you know some way of
+[07:25] sending a key over HTTP.
+[07:30] So how can we use so first I'm going to
+[07:34] show how we can use an public MCP server
+[07:37] that has keyix assess. So I found this
+[07:39] fun server yesterday. This is the tab
+[07:42] server. Table is a service for searching
+[07:45] the web. Uh so many people like to use
+[07:47] this server so that their uh agents like
+[07:51] their coding agents have more up-to-date
+[07:53] information from the web instead of
+[07:56] relying what's in what's in the weights
+[07:57] of the model. Right? So here you can see
+[08:00] their MCP server is available at a URL
+[08:02] mcp.tably.commcp
+[08:05] and uh for their keys they have you put
+[08:09] it in the authorization header. Right?
+[08:11] So we say authorization bearer and then
+[08:13] we put the key in there. Now, when we're
+[08:17] configuring an MCP server in VS Code
+[08:20] that uh that ex expects a key, something
+[08:24] that's nice you can do is you can
+[08:26] actually tell VS Code like, hey, this is
+[08:29] a key. This is secret. I want to keep it
+[08:31] secret and VS Code will store it in a
+[08:34] secret store for you. Uh so that way you
+[08:36] don't have to worry about exposing your
+[08:37] secret. So it'll prompt you for it, save
+[08:39] it, and then it'll be there. So let me
+[08:41] show you. Let's see. I've got it running
+[08:45] over here. Okay. So, here you can see uh
+[08:48] I've added it uh to my global MCP
+[08:53] uh.json configuration. So, that way I
+[08:55] can access this Tableau MCP server from
+[08:58] all of my workspaces.
+[09:00] And um and yeah, so let's just start
+[09:03] this. Oh, you can see here. So, when I
+[09:05] press start, it pro it pops up this
+[09:08] thing that asks for my API key. So, I'm
+[09:11] going to go over here and grab my API
+[09:14] key. Okay, great. All right. So, now I'm
+[09:17] going to enter that.
+[09:21] And it saves it.
+[09:24] And it started and it's got tools. So,
+[09:27] now we are we have a connection to the
+[09:29] server. So, now I'm going to check my
+[09:31] copilot chat and see uh I'm going to
+[09:34] enable it. And underneath it, we can see
+[09:36] it's got the ability to crawl, extract,
+[09:38] map, and search. That search one is the
+[09:40] one I really want to use. So let's try
+[09:43] searching. So we're say what is the
+[09:46] latest LLM released by Google.
+[09:52] All right. Now the qu you know here I'm
+[09:54] asking GitHub copilot this question and
+[09:57] GitHub copilot now knows that it has the
+[09:59] Tably MCP server.
+[10:02] It may not decide to use it. Right? an
+[10:04] agent. You give an agent a bunch of
+[10:06] tools and the agent has to decide what
+[10:09] it's going to use. Um I'm hoping it Oh,
+[10:11] good. Okay, great. So, it did decide to
+[10:15] uh to use that server. Uh so, here we
+[10:19] can see it says, "Okay, I'm going to
+[10:20] search. I'm going to get I'm going to
+[10:22] look for this, right? Uh added on deep
+[10:25] mine announcement." Okay, so let's see.
+[10:28] I'm going to say allow. [snorts] And now
+[10:31] it is running against that server. And
+[10:33] so that is VS code is passing my key to
+[10:37] Tavi
+[10:39] and uh and getting back responses
+[10:42] successfully. Right? So we can see uh a
+[10:45] bunch of things and say as of December
+[10:47] 18th the latest LM release is Gemini 3
+[10:50] Flash. Now the funny thing is I use
+[10:52] Gemini 3 Flash as my model for asking
+[10:54] this too. Um but it clearly got this
+[10:57] information from the actual web search,
+[10:59] right? And so that's, you know, it's
+[11:01] very powerful to use an uh an MCPS
+[11:04] server like Tabi, which gives your uh
+[11:07] agent the ability to look updated
+[11:10] information like that
+[11:12] and and get back the results. Uh but the
+[11:15] main goal here is to show you just how
+[11:17] you can use a HTTP MCP server that
+[11:22] expects a key. So here, this is how I
+[11:24] use it in VS Code. I can also use it
+[11:27] from a programmatic agent, right? So,
+[11:29] I'm going to go back over to um to this
+[11:34] uh to another repo. Uh so, this is uh
+[11:37] this code that I'm about to show. This
+[11:39] is in the Python MCP demos repo. This is
+[11:41] the repo we've been showing throughout.
+[11:43] I just added this demo last night. So,
+[11:45] if you did already check out the repo,
+[11:47] you're going to want to get pull the
+[11:48] latest changes.
+[11:50] So underneath agents I've got an agent
+[11:54] framework tavly example here.
+[11:58] So what you can see is that we can say
+[12:02] we want to use this MCP server as a tool
+[12:06] and here's the URL and then the headers
+[12:10] are passing in that key, right?
+[12:14] And then we tell it to search the web
+[12:16] and here I'm asking what's new in Python
+[12:18] 314. Okay. So, let me go ahead and run
+[12:22] this.
+[12:24] And I've already saved my key into the
+[12:26] environment in this terminal. So,
+[12:27] hopefully it should have access to this
+[12:30] environment variable that has the key in
+[12:32] it. And it should be able to pass it in.
+[12:40] So, we're passing it in here. And
+[12:42] remember, this this key is per user. So
+[12:45] Tabi has set up a system where they're,
+[12:48] you know, they've given me a key and
+[12:49] it's just for me. And if I accidentally
+[12:51] expose it, like sometimes when I'm live
+[12:53] streaming, I might accidentally reveal a
+[12:55] key. If I accidentally reveal it, then
+[12:58] what I would do is delete that key and
+[13:00] create a new one, right? The general
+[13:02] risk of keys is that you might expose
+[13:04] them, right? Like you might check them
+[13:06] into version control. You might flash
+[13:07] them on the screen when you're
+[13:08] presenting. You might just accidentally
+[13:10] put it in your JavaScript code and and
+[13:12] reveal it that way, right? So there's a
+[13:14] definite risk of keys and that's why we
+[13:16] often don't use keys at Azure um when we
+[13:19] can avoid it because we have other ways
+[13:21] of of uh doing uh access but many MCP
+[13:25] servers h will give you keys many APIs
+[13:28] will give you keys and so you just want
+[13:29] to be store them as securely as possible
+[13:32] and if you know that a key has been
+[13:34] compromised then you want to you know
+[13:36] revoke your key and make a new one
+[13:38] right.
+[13:40] All right so now
+[13:45] Okay. Uh so let's see. So it did query
+[13:48] uh it ran the framework and uh it got a
+[13:52] bunch of information about Python 314
+[13:54] and it got a bunch of citations, right?
+[13:56] So uh it successfully used the Tavi
+[14:00] server. Uh we could also do the same
+[14:03] thing with lang chain. So we've got a
+[14:04] lang chain example here because I know
+[14:06] we've got some uh lang chain fans in the
+[14:09] chat. Uh so you know this looks really
+[14:12] similar right? We grab our key from the
+[14:14] environment. We set up our MCB server
+[14:18] pass the key in the headers the way that
+[14:21] this server expects. Remember every
+[14:23] server expects different things right
+[14:24] like actually even this server also
+[14:26] accepts doing this. Um but I think
+[14:28] that's not as nice looking. So so I went
+[14:31] for you know doing the bearer token. But
+[14:33] you know generally every server will
+[14:35] will set it up a different way as to how
+[14:37] you pass in the key and you just have to
+[14:38] make sure you pass it in the way that
+[14:40] server expects.
+[14:42] Okay. And we got a very similar response
+[14:44] from lang chain.
+[14:48] So that is how we could use a public MCB
+[14:52] server with a key. The next question is
+[14:55] how would we build our own server that
+[14:59] has keybased assets? Right? Uh so if you
+[15:02] wanted to deploy an MCP server with
+[15:05] keybased access on Azure, what
+[15:08] strategies might you use? Uh one thing
+[15:11] that you could do is Azure Functions
+[15:13] because Azure Functions does actually
+[15:15] have builtin basic support for keys. Uh
+[15:19] it's really designed more for like
+[15:21] internal tools and and prototyping. uh
+[15:24] it's not designed for like APIs that
+[15:26] you're going to give out to thousands of
+[15:27] users because it's only a couple keys
+[15:29] and uh it doesn't have like built-in key
+[15:31] rotation and and all this stuff. Um but
+[15:34] you know it's it can be it can be an
+[15:36] option for you and um you know it's just
+[15:39] it's very easy to set up. So I'll I'm
+[15:41] going to show a demo of that one. And
+[15:43] then there's Azure API management. So
+[15:45] this is what you want to use if you're
+[15:46] truly setting up like a public-f facing
+[15:48] API and you want something you know
+[15:51] similar to what tabi has here where uh
+[15:53] you know a developer can actually have a
+[15:54] portal and in that portal they can see
+[15:56] their keys. So API management can set up
+[16:00] a full public facing API for you which
+[16:03] has a developer portal which will give
+[16:05] out keys and you know can let developers
+[16:07] revoke their keys and do new ones. So it
+[16:10] it's basically like you want an API boom
+[16:12] Azure will help you make an API. So, I
+[16:14] really love that. I I think it's very
+[16:16] cool how easily anyone could set up a
+[16:18] public API now thanks to services like
+[16:21] Azure API management. So, that is what
+[16:24] you would want to use when if you were
+[16:26] actually going to develop an MCV server
+[16:28] like the Tableau server where anyone
+[16:30] could go to your web page, sign up, get
+[16:32] an API key.
+[16:38] So, how can we deploy an Azure function
+[16:40] with key access? uh we have this repo
+[16:43] here that uh you can use to to do this.
+[16:46] This repo actually supports both
+[16:49] keybased access and um oathbased access.
+[16:53] So if you want to use the keybased
+[16:55] access uh I gave the instructions here.
+[16:57] You just set set a variable when you're
+[17:00] doing the deployment and then that'll
+[17:02] set up the app. Uh so I can show you
+[17:04] I've got the app um the function app
+[17:08] running here. Uh so you can see our
+[17:13] lovely not found at the root and then we
+[17:15] go to slashmcp and we see the error that
+[17:17] we always expect if we go to slashmcp
+[17:19] because you can't do a get to the
+[17:21] slashmcp. So here we can see that we
+[17:23] indeed have an MCP server running and if
+[17:27] we look at the functions we can see that
+[17:28] there are keys for the function and
+[17:32] these keys we've said that in order to
+[17:34] use this function you have to pass in
+[17:36] one of these keys here
+[17:40] and then we can add new keys if we want
+[17:41] to. Right? So this is so I've got that
+[17:44] function set up and let me uh show you
+[17:51] what that function actually um does. So
+[17:55] here is the the function. It is using
+[17:58] fast MCP as we've seen before.
+[18:02] Uh so we're using fast MCP but we're
+[18:04] also using Azure functions. And this one
+[18:07] is it's a weather MCP server that's
+[18:09] using the uh an API to get back the
+[18:12] weather and return it.
+[18:15] So that's that's what the function code
+[18:17] looks like. And then in order to use
+[18:19] this function uh here I've got it set up
+[18:22] in VS Code. So this is the URL of the
+[18:25] function that I was just showing in the
+[18:27] browser. And in this case in order to
+[18:30] pass in the key we're passing in the X
+[18:32] functions key header. This is what Azure
+[18:34] functions expects. and we telling it to
+[18:37] use this function app key here. And I've
+[18:40] already set it in VS Code. So that's why
+[18:42] it chose it as like this password
+[18:45] indicating that it's already stored it.
+[18:46] Right? So this is how we securely store
+[18:49] keys in VS Code that we're using with
+[18:51] MCP servers.
+[18:54] Okay. So now that that's set up there, I
+[18:57] can go and check to see which ones I'm
+[19:00] using. Uh so we can see
+[19:03] uh deployed MCB server is enabled.
+[19:05] That's the one that's pointing at the
+[19:07] Azure function. So then I'll say are
+[19:10] there any
+[19:12] weather alerts? We'll check for our
+[19:14] producer in Washington. I think they
+[19:17] were having flooding this week. Uh so
+[19:20] let's see. Uh let's see if it'll call
+[19:24] there. So here you see it wants to call
+[19:27] the deployed MCP server. this one here,
+[19:30] the Azure function, and it is passing it
+[19:33] the state WA because that's what that
+[19:36] function expects
+[19:40] and running it. And it's also going to
+[19:42] get a weather forecast for that latitude
+[19:44] longitude because it knows the latitude
+[19:46] longitude of Redmond, Washington. So,
+[19:49] it's running a few different tools here.
+[19:52] And in order to call those functions, it
+[19:55] was passing the key, right? because
+[19:57] these are these this function is gated
+[19:59] based off of key access.
+[20:03] So here we go. There are indeed some
+[20:05] floodings. Secure your garbage cans and
+[20:08] patio furniture and avoid flooded roads.
+[20:10] All right,
+[20:12] great. So that is uh that's how we can
+[20:15] use how we can both build a Azure
+[20:18] function that has keyb access and then
+[20:20] use it inside VS code.
+[20:25] Okay, so that is what I want to show on
+[20:27] keybase access. I also encourage you
+[20:29] definitely to check out API management
+[20:32] as an approach there if you are setting
+[20:35] up a public MCB server with API keys.
+[20:40] Now we're going to dive into OOTHbased
+[20:44] access
+[20:45] uh to specifically so we can allow users
+[20:48] to authenticate to our MCP servers and
+[20:50] that we can do things on behalf of those
+[20:54] users.
+[20:56] So, what this is going to look like once
+[20:58] we get it set up eventually is that the
+[21:00] MCP client is going to send a bearer
+[21:04] authorization token. And this access
+[21:06] token here is going to be an OOTH access
+[21:09] token. and the MCP server will receive
+[21:12] that access token and validate it as a
+[21:14] valid token and then know who uh you
+[21:19] know know who that that person is
+[21:21] authorized to access that server and
+[21:23] then potentially do things on behalf of
+[21:25] that uh user.
+[21:27] So that is our end goal to get to that
+[21:29] point. Now to get to that point, it's
+[21:32] actually a fair about amount of um work
+[21:36] involved to be able to have a client
+[21:39] send the access token to the server.
+[21:45] So in order to understand how it works,
+[21:47] we're going to talk a lot about OOTH 2.1
+[21:51] and a lot of additions to OOTH 2.1.
+[21:55] There are a lot of diagrams in the next
+[21:59] few slides and because when it comes to
+[22:01] OATH it's a bit complicated and for me
+[22:04] at least the way I understand it is by
+[22:07] uh thinking through the diagrams and uh
+[22:10] and and tracing the path of oath in in
+[22:13] these diagrams. Uh so just mentally
+[22:16] prepare yourself. We are going to talk
+[22:19] about OATH and I will say I don't
+[22:21] consider myself an OOTH expert. uh but
+[22:24] it is a really powerful technology and
+[22:27] so I always appreciate the opportunity
+[22:29] to learn more about OOTH and uh try to
+[22:32] understand it more deeply.
+[22:34] So uh we are using OATH 2.1 and uh in
+[22:39] OATH 2.1 there's different entities
+[22:41] involved right so we have the
+[22:43] authorization server so for example
+[22:45] Microsoft Entra is an authorization
+[22:47] server so it's it has this notion of
+[22:49] users and who's allowed to access it
+[22:51] right so that's our authorization server
+[22:55] and then we have the resource server
+[22:58] over here this is the one that has the
+[23:00] actual you know resources that the user
+[23:03] wants to access and they want to be able
+[23:05] to prove that they are authorized to
+[23:08] access that those resources. So in our
+[23:11] case the MCP server is the OOTH resource
+[23:15] server and then we have the OOTH client
+[23:18] and in that CA in our case it's the MCP
+[23:20] client and the client wants to be able
+[23:23] to access that server on behalf of the
+[23:26] user who is the resource owner right so
+[23:29] you can think of this as like when we're
+[23:30] using like VS code with GitHub copilot
+[23:32] like you know I'm I'm the user I want to
+[23:35] use GitHub copilot in order to access uh
+[23:39] you know my resources like my you know
+[23:42] word documents um you know based off of
+[23:45] my Microsoft Entra identity right so
+[23:48] there's all these entities involved in
+[23:50] this OOTH 2.1 flow
+[23:55] so here is the simplified flow of OOTH
+[23:59] for MCP
+[24:01] um and uh we're we'll start with the
+[24:04] simplified flow and then we're going to
+[24:06] add a few things to it and maybe I
+[24:09] should have actually animated this, but
+[24:11] uh we start off with the user, right? So
+[24:13] the user wants to do something that
+[24:15] requires an MCP server, right? So the
+[24:17] client is like, okay, I know this
+[24:18] client, I know this user wants to use
+[24:20] this MCP server. So what I'm going to do
+[24:23] is um ask the author, you know, first it
+[24:26] checks to see if it's already
+[24:27] authenticated. But if it gets like a
+[24:29] 401, it's like, okay, I got to redirect
+[24:31] to this authorization server and ask for
+[24:33] authorization, right? So we go to the
+[24:36] authorization server and that
+[24:38] authorization server prevent presents a
+[24:40] prompt to the user that says hey user
+[24:42] who are you right enter your login
+[24:44] information. So the user says okay you
+[24:46] know I'm Pamela Fox here's my password
+[24:48] and then the authorization server says
+[24:50] oh okay I you know I I see who you are
+[24:53] now I'm going to make sure that this MC
+[24:55] client is legit. Right? So at that point
+[24:57] it both authenticates the user and
+[24:59] checks to make sure that it knows who
+[25:01] this client is and that the client is
+[25:03] allowed to uh you know be be asking for
+[25:07] things from the authorization server. So
+[25:10] then it'll say okay I've verified the
+[25:12] client the client uh you know wants
+[25:14] wants access to your account. The client
+[25:16] wants to do you know you know this this
+[25:19] um you know it wants this scope from
+[25:21] your account. Do you agree? Right? So to
+[25:23] say, okay, do you agree to give this
+[25:24] client access? And the user says, oh,
+[25:27] okay, yeah, I'm okay with that client
+[25:28] having access. Great. That goes back to
+[25:31] the authorization server. And then the
+[25:34] authorization server says, okay, great.
+[25:36] Here is your authorization code. And the
+[25:38] MP client then exchanges that
+[25:41] authorization code for an access token.
+[25:44] And the authorization server says,
+[25:46] "Okay, sure. Here's your access token."
+[25:48] And now the MCB client has the access
+[25:51] token and it can send a request using
+[25:54] that access token and uh that'll go
+[25:57] through to the MCB server. The MCB
+[25:59] server will do validation of that access
+[26:02] token that it looks good and then if
+[26:04] it's good it can return authenticated
+[26:06] results and it can also it can look at
+[26:08] the claims in the token to get more
+[26:11] information about who's trying to access
+[26:13] it.
+[26:15] So all of that was to get to this stage
+[26:17] here, right? to be able to have it send
+[26:19] an access token, we had to go through
+[26:21] all of those steps. And remember, this
+[26:24] is the this is the simplified flow.
+[26:27] [laughter] Uh so we're going to dig into
+[26:29] a few more steps that uh that you know
+[26:32] don't quite fit in this diagram.
+[26:38] So the first step is that the MP client
+[26:42] needs to figure out what authorization
+[26:45] server it is going to redirect to. So
+[26:47] this this first change we're going to
+[26:50] talk about really happens before this
+[26:52] this this arrow here. The client is not
+[26:55] sure who the authorization server is. It
+[26:58] needs h to have a way to discover the
+[27:01] correct authorization server. So this
+[27:04] actually requires effort on from two
+[27:06] different entities. First the MCP
+[27:09] server. The MCP server has to support
+[27:12] what's called protected resource
+[27:14] metadata. This is a document that says,
+[27:17] "Hey, this is the authorization server
+[27:19] that I expect you to be using, right?
+[27:22] It'll include this authorization server
+[27:23] also include scopes." So that m that PRM
+[27:28] is located at some URL on the actual MCP
+[27:32] server. So that is something that you if
+[27:34] you are building an MCP server, your MCB
+[27:36] server needs to uh have a route that
+[27:42] will give back that PRM information.
+[27:46] So then that'll go back to the client.
+[27:48] The client's like, "Oh, okay. I see
+[27:49] which authorization server you're saying
+[27:51] I should use." Then the authorization
+[27:54] server itself
+[27:56] has to provide discovery of some
+[27:57] additional information because there's
+[27:59] multiple URLs involved uh with with
+[28:02] authorization servers. So the PRM is
+[28:04] only going to list the main
+[28:05] authorization server URL. Then the
+[28:07] authorization server has to um give back
+[28:10] an additional document that says okay
+[28:12] yeah for my server here's all the
+[28:15] detailed information about how you're
+[28:17] going to authenticate.
+[28:21] So what does this look like for PRM?
+[28:24] Right? So uh it starts off the MCP
+[28:27] client attempts to make a request to the
+[28:30] MCP server and it doesn't have a token
+[28:32] yet. Right? So the MC server when it
+[28:35] gets a request that does not have an
+[28:36] access token, it returns an HTB 401 that
+[28:40] says, "Hey, you're not authorized." And
+[28:42] it adds an additional header. This is a
+[28:45] special header called WW authenticate.
+[28:47] And that header contains a the URL for
+[28:51] the PRM. Right? So then the client says,
+[28:53] "Oh, oops. I need to I need to I need to
+[28:56] get a token. How am I going to do that?
+[28:58] Let me find out some more information."
+[28:59] It goes and it fetches that URL and then
+[29:02] the server says, "Sure. Here's here's
+[29:04] the PRM document, right? And it's just a
+[29:05] JSON document."
+[29:08] So that's one flow that you can do. Um
+[29:11] the other flow is that if the MCP server
+[29:15] returns back 401 unauthorized and
+[29:17] doesn't have that WW authenticate header
+[29:20] then the MCP client just tries various
+[29:23] uh PRM URLs and these is what's called a
+[29:26] well-known URL. So it's like well-known
+[29:29] protected resource metadata. So it'll
+[29:31] just try these conventions these URL
+[29:34] conventions and it'll hope that it finds
+[29:36] a PRM at one of those URLs. And once one
+[29:39] of those is successful, then it's like
+[29:41] great, I found the PRM. Now I've got the
+[29:43] information about what authorization
+[29:45] server we need to use.
+[29:50] So uh we've been using FastMPP to build
+[29:53] our Python servers so far. Uh as long as
+[29:55] you're using FastMPP and you're using
+[29:57] one of the O providers inside FastMPP,
+[30:00] it will actually automatically add the
+[30:02] PRM route for you and it'll add that
+[30:05] header. So if you're using fast MCP with
+[30:08] any of the approaches we're using today
+[30:09] with the O provider PRM will be taken
+[30:12] care of for you. Uh so it'll just add in
+[30:15] this route which is wellnown protected
+[30:18] resource that is the uh route that every
+[30:22] MCP client knows that it needs to look
+[30:24] for in order to find the PRM.
+[30:28] All right. Now we are moving on to the
+[30:31] authorization server. Once and once we
+[30:35] find out which authorization server
+[30:37] we're using, we need to get additional
+[30:39] metadata from that authorization server
+[30:41] that says exactly how to use that
+[30:43] authorization server.
+[30:45] So the MCP client once it gets back that
+[30:48] PRM, it gets back the authorization
+[30:50] server URL, it's going to make a request
+[30:53] to the authorization servers well-known
+[30:55] URL and then hope that it gets back a
+[30:58] response. And it there's uh two or three
+[31:01] different URLs it'll try. So once again,
+[31:03] these are well-known URLs where they are
+[31:05] a particular path that starts with
+[31:07] well-known
+[31:09] um and uh it'll just try these in order
+[31:13] um based off whether the authorization
+[31:15] server was just a root path or had a
+[31:17] path in it and it'll just try those. But
+[31:19] basically there's a bunch of well-known
+[31:20] URLs. The client will just try these in
+[31:23] order until it finds that JSON document
+[31:26] that contains the additional
+[31:28] information.
+[31:30] One thing I've discovered about OOTH, it
+[31:32] has a lot of reliance on well-known
+[31:34] URLs. So, we've got the well-known URL
+[31:36] for the PRM and now we have this
+[31:38] well-known URL for the authorization
+[31:40] server discovery as well. So, basically,
+[31:42] an authorization server needs to support
+[31:45] one of these URLs, right? So, for
+[31:47] example, Entra supports the um this
+[31:50] final one, the open ID configuration
+[31:52] URL. So, it actually does support this
+[31:55] metadata discovery flow.
+[31:58] Okay. So now we covered so all of that
+[32:01] actually happened before this flow even
+[32:04] starts right because the MCP client had
+[32:06] to figure out how to make that
+[32:07] authorization request. So it had to do
+[32:10] the PRM and then the authorization
+[32:11] server discovery and that got it to the
+[32:13] point where it could actually make this
+[32:15] authorization request. Right?
+[32:19] So good. So we got to that point. Now
+[32:21] there's another part of this flow that
+[32:23] is interesting and that's this part
+[32:25] right here. Right? where we validate the
+[32:27] client registration.
+[32:29] And that is tricky because usually
+[32:33] authorization servers know which clients
+[32:36] want to use them and are pre-registered.
+[32:38] But with MCP, we have people using all
+[32:42] sorts of MCP clients, right? They can be
+[32:44] using VS Code, Claude Desktop, ChatGBT,
+[32:47] any of the other hundreds of of, you
+[32:50] know, MCB clients that are out there,
+[32:52] right? And um you know ideally your MCP
+[32:56] server would be usable with arbitrary MP
+[33:00] clients right so how can the
+[33:02] authorization server validate client
+[33:04] registration if it's never seen the
+[33:07] client before if it's an arbitrary
+[33:10] client. So that's where we get into the
+[33:13] next interesting part of uh the OOTH for
+[33:16] MCP.
+[33:20] So here's the flow I came up with here
+[33:23] to talk through this. So if the
+[33:26] authorization server does know the MCP
+[33:28] client, that's what's known as
+[33:30] pre-registration.
+[33:32] And in that case, it's quite easy
+[33:33] because you know the authorization you
+[33:35] already knows. It says great, I know you
+[33:38] you're good check, you're good to go,
+[33:40] right? Um, and so sometimes we do do pre
+[33:42] re-registration like especially if
+[33:44] you're building both the client and the
+[33:45] server or if you're only trying to
+[33:47] support a client like VS Code Copilot,
+[33:50] then that's fine. You can use
+[33:52] pre-registration, but most people want
+[33:55] the their MCP servers to be usable by a
+[33:57] bunch of MCP clients that you may not
+[33:59] know. So in that case, we go down this
+[34:02] path here, right? And there's two
+[34:04] different options that we can use um as
+[34:07] part of MCP off. So first we check to
+[34:10] see okay does the authorization server
+[34:12] and the MCB client support what's called
+[34:15] CMID or SIMD. So if they support SIMD
+[34:19] which is a new OOTH specification like
+[34:21] very new like the last like two months
+[34:24] new. So it's a very new ooth
+[34:25] specification so it is not well
+[34:27] supported yet. Um but if you are lucky
+[34:31] and both the authorization server and
+[34:33] MCB client support SIMD then that is
+[34:36] what you should use. that is going
+[34:38] forward. That is a path for enabling
+[34:41] authorization servers to work with
+[34:42] arbitrary MCP clients.
+[34:46] If they don't, which is the most likely
+[34:49] case right now, then you're going to use
+[34:51] DCR, dynamic client registration. And
+[34:54] we're calling this the legacy fallback,
+[34:56] but it's also like what is actually most
+[34:59] common right now. So going forward, SIMD
+[35:02] is, you know, in the future, we're
+[35:04] hoping that um that it's all going to be
+[35:06] SIMD. Right now, practically, we are
+[35:10] mostly using DCR
+[35:12] because SIMD is so so so new.
+[35:18] So let's talk about SIMD first because
+[35:21] that is the wave of the future. Uh so
+[35:24] the way that SIMD works is that um the
+[35:28] MCP client itself is going to host a
+[35:31] SIMD document that describes itself. It
+[35:33] says, "Hey, I'm an OOTH client. Here's
+[35:36] my information. Here's how you should
+[35:38] work with me." Right now, VS Code
+[35:40] actually does support SIMD already.
+[35:42] Right? So, we've talked about how great
+[35:43] VS Code is at supporting MCP. They're
+[35:45] one of the first clients that uh you
+[35:47] know is supporting SIMD and they've got
+[35:50] their their SIMD document. So you can
+[35:52] actually look at the um the VS code sim
+[35:57] document, right? So um the goal is going
+[36:01] forward like that we'd expect um I think
+[36:04] cursor cursor just announced sim cursor
+[36:06] does have a simdy. I think I saw that
+[36:08] earlier this week. Um presumably claude
+[36:11] claude must have a sim, right? So
+[36:13] hopefully uh more and more of these you
+[36:16] know desktop applications and and other
+[36:19] clients will add these these sims. Now
+[36:21] they do have to be at a HBS URL. Luckily
+[36:24] most people have a domain that they can
+[36:26] you know make an HBS URL and put their
+[36:28] SIMD here. But here you can see so
+[36:30] Visual Studio Code says okay I'm an MC I
+[36:33] you know this is you this is my OOTH
+[36:35] client information here's my grant types
+[36:37] here's my redirect URIs um you know
+[36:40] here's the the ID of this document
+[36:42] itself right so it gives all this
+[36:45] information that tells uh that you know
+[36:48] describes how to work with it as an MCP
+[36:50] client
+[36:53] so that's what the MC client has to
+[36:56] support is having that SIMD document
+[37:00] And so now here's the what the flow
+[37:02] looks like with SIMD. Uh so when so if
+[37:06] the user you know wants to use MCB
+[37:09] server and um you know the it sees that
+[37:14] the client you know if if the client has
+[37:17] a client ID it has a SIMD it's going to
+[37:20] specify its SIMD URL when it's making
+[37:24] the authorization request. Right? So
+[37:26] normally client ID would like be this
+[37:27] numeric thing like client ID equals 1 2
+[37:29] 3 4 5 6 right in this case it's going to
+[37:31] say hey my client ID is this HPS URL
+[37:34] which is actually the the the SIMD
+[37:36] document and so then the authorization
+[37:39] server when it's validating client if it
+[37:42] supports SIMD it will detect that the
+[37:45] client ID is a URL and it will go and
+[37:48] fetch that URL from that metadata
+[37:51] endpoint
+[37:53] and get back that JSON and Then the
+[37:55] authorization server will validate it
+[37:57] and make sure that from a security
+[37:58] perspective everything checks out um
+[38:01] that everything matches that it all it
+[38:03] all lines up right says okay this is a
+[38:05] valid SIMD this looks good and then the
+[38:08] authorization server really say okay
+[38:10] based on that SIMD here is the client
+[38:12] that you want to consent to do you
+[38:15] consent to this client right and then um
+[38:18] and then we go through the rest of the
+[38:19] OOTH flow and it's just whenever the
+[38:22] client is interacting with the
+[38:23] authorization server it's always going
+[38:25] to be passing its client ID as that SIMD
+[38:28] document instead of a numeric ID.
+[38:33] Okay, so that was SIMD. That is the, you
+[38:36] know, the wave of the future and we're
+[38:39] all hoping to move towards SIMD and
+[38:42] ideally I would only show you SIMD today
+[38:44] except that practically it's just not
+[38:47] well enough supported yet on both the
+[38:49] client side and the authorization server
+[38:51] side. So we need like another six months
+[38:54] or a year to like get to, you know,
+[38:56] everyone like really on board with SIMD.
+[38:59] So we do need to talk about DCR.
+[39:03] So with DCR, dynamic client
+[39:05] registration. Here we're actually going
+[39:08] to dynamically register the clients. So
+[39:11] the MC client is going to ask the
+[39:13] authorization server like, hey, here's
+[39:15] my information. Like basically like
+[39:16] imagine all that information that we had
+[39:18] here. uh the client is going to send all
+[39:21] that information to the authorization
+[39:23] server and say like hey can I can I
+[39:24] register is that cool like here's all my
+[39:27] information and the authorization server
+[39:29] needs a database where it's going to
+[39:31] store that client information and say
+[39:33] okay I accept your registration request
+[39:35] I'm going to store it and I'm going to
+[39:37] issue you a client ID right and so now
+[39:40] the MCB client has an ID and then going
+[39:42] forward it'll use that numeric ID with
+[39:45] all of its flows right and then the rest
+[39:47] of the flow is the same so the
+[39:48] difference is just there's this
+[39:49] registration step and um and so that has
+[39:54] to be implemented you know supported on
+[39:56] the authorization server side and the
+[39:59] authorization server has to add a
+[40:00] database and that's why many
+[40:01] authorization servers didn't want to add
+[40:03] support for DCR because then they have
+[40:06] to add you know they have to have a
+[40:07] database and whenever you have to like
+[40:09] start storing data like you have the
+[40:12] risk of oh how big does this database
+[40:13] need to be like when can I remove
+[40:15] information from this database there's
+[40:17] also a risk of a like kind of a DDoS
+[40:20] attack right to this flash register
+[40:22] endpoint. So there were so many
+[40:24] downsides for authorization servers that
+[40:28] um you know that they weren't
+[40:29] implementing DCR and that's why the MCP
+[40:33] community came up with SIMD instead as a
+[40:38] something that would be more friendly to
+[40:40] authorization servers uh that would be
+[40:42] easier for them to support.
+[40:47] Okay. I I know I [laughter] I see my
+[40:49] eyes. Yes, there's been a lot of
+[40:51] diagrams. I think we're nearly through
+[40:54] the diagrams now. Um but I I the thing
+[40:58] is you have to kind of understand all
+[41:01] the different parts of the MCB off flow
+[41:03] because the support for them is so
+[41:05] variable and so you kind of have to know
+[41:08] what um what parts of MCB off are not
+[41:11] supported by your particular like setup
+[41:13] and provider so that you know what the
+[41:15] workaround is that you need to use.
+[41:17] So let's talk about support for full MP
+[41:20] off who supports it which authorization
+[41:23] providers because most of this comes
+[41:24] down to the authorization provider. We
+[41:26] also saw that for SIMD it also depends
+[41:28] on the client but most of this has to be
+[41:30] done by the authorization provider. Um
+[41:33] and all of it requires at least some
+[41:34] support by the authorization provider
+[41:36] like even you know for SIMD it has to
+[41:38] fetch that document right so
+[41:40] unfortunately Microsoft Entra which is
+[41:42] probably what many of you want to use
+[41:43] given this is the Microsoft reactor
+[41:45] channel it only supports the metadata
+[41:49] discovery uh that well-known path that
+[41:51] has the metadata it does not support
+[41:53] SIMD does not support DCR uh I would
+[41:56] guess it probably would never support
+[41:57] DCR now that that's the legacy thing I'm
+[42:00] hoping it's going to support SIMD given
+[42:03] that's the wave of the future. So, let's
+[42:04] all cross our fingers for SIMD support
+[42:07] in the future. So, unfortunately, Entra
+[42:09] has a bunch of X's. We will still see a
+[42:12] way to work around that though for those
+[42:13] of you who want to use Entra. Um, now
+[42:16] today we're also going to show an open
+[42:19] source identity server. Uh, if you, you
+[42:21] know, don't need to use an existing
+[42:22] identities, you just want any
+[42:23] identities, we're going to show how to
+[42:24] use Keycloak. And that one does support
+[42:27] DCR, though it has some bugs that we'll
+[42:28] work around. And then there's got some
+[42:30] other options here. So like Dcope and
+[42:32] Okit, those are both identity servers
+[42:34] that do uh optionally wrap Entra. So
+[42:37] those could also be options for you if
+[42:39] you want to use Entra. Um but you need,
+[42:42] you know, this DCR and SIMD support,
+[42:45] which is really nice. Uh there's also
+[42:47] Octa Ozero, that's another hosted
+[42:49] identity server. There's Scalekit,
+[42:51] another host identity server. Uh and
+[42:53] we're going to have a demo of Scalekit
+[42:54] in office hours from Bernhard who's in
+[42:57] the chat. So um definitely come to
+[42:58] office hours after to see that.
+[43:01] So you can see like the newer identity
+[43:02] servers like this the that are um uh you
+[43:05] know like startups that like they're
+[43:07] very fast to implement SIMD um we're
+[43:10] being a little slower on the Entra side.
+[43:15] So if you want to use OOTH with a Python
+[43:19] fastm server how can you do that? Well
+[43:22] the fastmcb team has tried to make it
+[43:25] very easy to add in ooth providers. uh
+[43:29] they have this base class OOTH provider
+[43:32] that um you know that is designed to
+[43:34] make it easy to uh to connect your
+[43:38] fastmcb instance with whatever o
+[43:40] provider you want to use and we can
+[43:42] break that into two subasses right so
+[43:45] there's a if if the oath identity
+[43:47] provider has full support for DCR then
+[43:50] you can use this remote o provider class
+[43:53] uh so that is what is and then there's
+[43:56] even like subasses for specific ones
+[43:58] like scale kit
+[43:59] Dcope, superbase, Ogit etc. If there's
+[44:03] no DCR support, then there's this OOTH
+[44:05] proxy subclass and that one will
+[44:09] implement DCR on top of it. So the DCR
+[44:13] will actually be implemented on your
+[44:14] server itself and then proxy to the
+[44:18] identity provider. Uh so it uses the
+[44:21] OOTH proxy for quite a few of the
+[44:23] options, right? GitHub, Azure, which is
+[44:25] Entra, Discord,
+[44:28] etc. Right?
+[44:30] So that's generally the approach is
+[44:32] you're either going to use a remote O
+[44:34] provider or an OOTH proxy provider.
+[44:39] So first let's look at how we can use a
+[44:41] remote OOTH provider that does have full
+[44:43] DCR support and hopefully in the future
+[44:46] SIMD support.
+[44:49] Uh so here I have an example of how easy
+[44:52] it could be if you're using a host
+[44:55] provider that is fully compliant right
+[44:57] so if it's fully compliant then fast MCP
+[45:00] makes it very easy so here we've got the
+[45:01] scale kit provider and we say hey this
+[45:03] is you know the scale kit URL here's our
+[45:06] resource ID here's my MCP servers base
+[45:08] URL and here these are these are the
+[45:09] scopes I want and then you just pass
+[45:11] them into the fast MCP class and say hey
+[45:13] this is my off provider right look how
+[45:16] easy that could be uh And this is the
+[45:19] what Bernard will demo in the office
+[45:21] hours if you want to see scale kit. Uh
+[45:23] so that's lovely. Like that's that's
+[45:25] just you know five line setup and boom
+[45:28] you've got full O on your MP server.
+[45:33] That's the dream and that works for many
+[45:35] of the O providers but not all of them.
+[45:39] [laughter]
+[45:40] So let's talk about KeyCloak. We wanted
+[45:42] to show Keycloak because it is an open
+[45:44] source identity server that anyone can
+[45:46] deploy with a Docker image. So if you
+[45:49] wanted to bring your own, you know, set
+[45:51] of users and and groups uh to the an MTP
+[45:55] server, you could use KeycCloak to do
+[45:57] that. And um we wanted to work with
+[46:01] Keycloak because we heard that it had
+[46:03] full DCR support. Now we found out along
+[46:07] the way that it also had some open
+[46:09] issues with DCR. Uh, and props to my
+[46:12] colleague Gwen for working through these
+[46:14] issues and and figuring it out. She
+[46:16] implemented the keycloak in the in the
+[46:18] repo. So, yes, it supports DCR, but no,
+[46:21] it doesn't support it perfectly, right?
+[46:24] So, we did have to do a little bit of a
+[46:26] workaround.
+[46:27] So the way we implement uh O with
+[46:30] keycloak is that we create our own
+[46:33] subclass a remote o provider and then
+[46:35] that sublo class basically you can check
+[46:38] the code but it has uh it basically has
+[46:41] to override the register route in order
+[46:43] to fix some headers that are wrong right
+[46:46] um but then once we did that then we can
+[46:49] you know we can set up a connection to
+[46:51] the keycloak provider uh with our
+[46:54] keycloak URL our scopes in our audience
+[46:58] and and it works.
+[47:01] So we have all the code written for that
+[47:03] in our Python MC demos repo, the one
+[47:05] we've been using uh for most of our
+[47:07] demos. So if you do want to try
+[47:09] Keycloak, you can uh follow these
+[47:12] deployment steps. So you're going to set
+[47:13] the off provider to Keycloak and then uh
+[47:16] you're also going to set your super
+[47:17] secure password, which you should
+[47:18] certainly change later. And that will
+[47:20] give you, you know, uh the ability to
+[47:22] access the admin. And then once it
+[47:24] deploys, it's going to set up a keycloak
+[47:27] container app that is actually the
+[47:29] keycloak image. Right? So uh here I've
+[47:32] got it uh okay keycloak. Right? So this
+[47:36] is actually I'm logged into the admin.
+[47:38] So you can see this is the keycloak
+[47:39] admin. I'm logged in admin with my
+[47:41] supercare password. And you can see
+[47:43] we've got realms. Uh realms are like
+[47:45] tenants if you know Entra stuff. Uh
+[47:48] we've got users, groups, clients. uh you
+[47:51] know lots of things we can configure
+[47:52] here for uh for this identity server
+[47:55] right so now I've got that I've got that
+[47:58] keycloak deployed and I also have the
+[48:00] MCP server deployed the one that has the
+[48:04] keycloak provider right so here I've got
+[48:06] my off MCP server and for keycloak
+[48:11] we've got it um set it up here
+[48:15] uh where it's using the off provider
+[48:18] okay so that's All that's all set up. Uh
+[48:22] so
+[48:24] I want to actually show you the whole
+[48:26] flow. Let's see if I can show you the
+[48:27] whole flow because I think it's really
+[48:29] interesting to see the whole flow of
+[48:31] doing the the OOTH flow. So let me try
+[48:33] running this ocp.
+[48:36] py. Uh oh wait, we're already in here.
+[48:39] Okay, let's just run. No, let me look at
+[48:42] my readme. This why I always document
+[48:44] things because I'll forget as soon as I
+[48:47] Okay, here we So I'm going to run it
+[48:49] using Unicorn. Okay.
+[48:53] All right. This is running.
+[48:55] Okay. All right. So I'm going to run
+[48:58] this server right now. It should be
+[49:00] using KeyCloak as its authentication.
+[49:05] Let's check the logs. Okay. It says
+[49:07] using KeycCloak DCR. Here I'm running
+[49:10] the server locally. I also have this
+[49:11] server deployed, but I want to show it
+[49:12] locally so I can just show you the logs
+[49:14] and see what's going on. And uh this is
+[49:17] like the realm which is like the tenant.
+[49:19] Okay. So now it's running. So what I'm
+[49:21] going to do is go to my mcp.json
+[49:25] and I'm going to tell it to start the
+[49:28] localhost server.
+[49:30] So what I want to show you in the logs,
+[49:32] it's kind of hard to see because it
+[49:33] grays it out, but see at first right
+[49:35] here it tried to make a postmcp and it
+[49:38] got a 401 unauthorized, right? It said
+[49:40] invalid token. Great. So now VS Code
+[49:43] knows when it gets that 401 that oh it
+[49:46] has to go do the look to see if if
+[49:49] there's an authorization flow right. So
+[49:51] first it goes to that PRM URL and you
+[49:53] see that it's a 200 for that PRM URL
+[49:55] that's that well-known oath protected
+[49:57] resource. Then it also goes to the
+[50:01] authorization server and that one it's
+[50:03] on our server too because we are
+[50:05] proxying
+[50:07] uh everything that MPO needs and that
+[50:10] gets forwarded to the actual Entra um
+[50:14] URL and then it's trying to do the post
+[50:17] to the register. Uh so okay we're doing
+[50:19] allow open. Okay, so this is going to
+[50:22] Keycloak and then it wants me to log in
+[50:25] and I'm going to log in with my super
+[50:28] secure test account. Uh
+[50:32] should delete this when you're doing in
+[50:34] fraud. All right. And then we log in. So
+[50:37] I'm logging in as test user and I showed
+[50:39] test user here, right? So now it says
+[50:42] sign in successful. We go back to VS
+[50:46] code and what you see is that it
+[50:49] successfully created the client and now
+[50:51] when it's doing all these post to the
+[50:52] MCP server it is getting 200. Okay. So
+[50:55] that means it is now accepting the
+[50:57] token. So VS code now knows how to um
+[51:02] you know send requests to this server
+[51:04] with a token that is authenticated. And
+[51:07] so now if I actually um you know use
+[51:09] this server uh let's see go here and
+[51:13] I'll turn this one on. Okay. All right.
+[51:18] I bought $67 of um avocado toast on my
+[51:23] AMX. Okay.
+[51:25] All right. Let's see if it's going to
+[51:28] use use this server here
+[51:34] so that we can see some more requests
+[51:36] going out to it.
+[51:41] All right. So, it wants to use this
+[51:43] server that's running here, the one we
+[51:44] can see in the terminal. So, I'm going
+[51:46] to say allow.
+[51:48] And
+[51:50] we should see another request go out to
+[51:54] this server here. Running,
+[52:00] running, running. All right. Going here.
+[52:03] Host.
+[52:05] Okay. Still running that. There we go.
+[52:10] All right. So, we see it went to the
+[52:12] server. It's adding the expense. Now,
+[52:15] what I want to show you is going to the
+[52:18] Cosmos DB for that server. Uh, I think
+[52:22] it's Okay, it's all done. Great. That
+[52:24] one's all done. Now, if I go to the
+[52:26] Cosmos DB for that server, what you can
+[52:29] see is that here's the $67 of avocado
+[52:32] toast. And notice now we have a user ID
+[52:36] and see this user ID. It starts with
+[52:38] 0159. If I go to my Keycloak admin, I
+[52:42] click on test user.
+[52:44] Of course, it just kicked me out because
+[52:46] I did a different login in here and so
+[52:47] it doesn't think I'm the admin anymore.
+[52:49] So, let me go ahead and get my No, it's
+[52:52] in here. Let me get my super secret
+[52:54] password. Great. All right, here we go.
+[52:58] Uh, so if I go and so here I looked at
+[53:00] the user, I clicked on this and see this
+[53:02] ID here 0159 0159 0159. So what we can
+[53:07] see is that we've actually used the user
+[53:09] ID from the token. And so that's in uh
+[53:13] here we added this token um user off
+[53:16] middleware
+[53:17] and um basically we get back the right
+[53:20] claim. Uh so we use the this this claim
+[53:24] here and that gets us back the user ID
+[53:28] and so then when we're actually storing
+[53:31] uh storing the user ID in the container
+[53:34] that user ID is the ident the actual
+[53:38] identifier of that user in the keycloak
+[53:40] system.
+[53:43] Okay. So there we go. So that's Keycloak
+[53:46] and um you know I showed it in local
+[53:48] host just so I could show you the logs
+[53:49] but you it also works on the deployed
+[53:51] URL. So I actually have it I've got the
+[53:53] the deployed server here and that works
+[53:56] as well. Um and that's what you'd
+[53:58] actually be using you know when you're
+[53:59] doing this for for production.
+[54:02] All right we have five minutes left and
+[54:05] of course we need to talk about Entra
+[54:07] because that's what probably many of you
+[54:09] are interested in. So, Entra does not
+[54:12] support DCR, does not support CIND. So,
+[54:15] we do need to use the OOTH proxy
+[54:18] approach. And so, here the fastm server
+[54:21] is going to be adding the routes uh on
+[54:26] top that it needs uh for doing for doing
+[54:30] registration. And even our keycloak kind
+[54:33] of was an oath proxy too just because of
+[54:35] that one bug.
+[54:37] So, close to full DCR, but so far. Uh so
+[54:40] basically yeah we're going to use a full
+[54:41] OOTH proxy approach that's going to
+[54:43] compensate for everything that Entra
+[54:46] doesn't have. And because of that we
+[54:48] also need to add on a database for
+[54:50] client ID storage. So we're going to use
+[54:52] Cosmos DB since we're already using
+[54:54] Cosmos DB and uh that can be it's a good
+[54:56] place to to store the client IDs. Uh so
+[54:59] that's what we're going to set up is
+[55:00] this proxy and fastmcp already has a
+[55:04] built-in proxy for it. So that's the
+[55:06] Azure provider class and it's you know a
+[55:09] subclass of their oath proxy class that
+[55:11] implements the DCR for us. So that's in
+[55:15] this OM MCP right. So here if we're
+[55:18] doing Entra uh in production I set up
+[55:22] the Cosmos DB store
+[55:25] and um you know locally I just use in
+[55:27] memory for the clients and then set up
+[55:30] that Entra with our client ID and client
+[55:32] secret with the tenant that we're doing
+[55:34] the authentication with. We're doing a
+[55:36] single tenant off here um with the base
+[55:39] MCP URL with the the scope we want and
+[55:42] with our client store. So that's that's
+[55:44] what sets it all up. And uh yeah, now
+[55:48] let me just actually show you show you
+[55:50] that flow.
+[55:52] Uh I'll just do it with the with this
+[55:55] one. Right. So I've already
+[55:56] authenticated to this one, but what I
+[55:57] can do is to show you uh it again, I'm
+[56:01] going to remove
+[56:04] I'm going to uh remove the setup of this
+[56:08] in VS Code to force it to go through the
+[56:10] flow again. So, I'm going to remove it
+[56:13] here. Okay.
+[56:15] All right. And then I'm going to close
+[56:18] down the Keycloak server.
+[56:21] I'm going to check this off. I'm going
+[56:24] to check Entra on
+[56:26] and I'm going to start that Entra
+[56:29] server. Okay. So, start.
+[56:32] All right. It says it wants to
+[56:33] authenticate and we're going to open
+[56:35] this up. And notice this is a fast MCPIP
+[56:40] screen instead of an onto screen. And
+[56:42] that is because we're using the fast MCP
+[56:44] OOTH proxy. Right? So we allow access
+[56:47] here.
+[56:49] And very quickly, you might have seen it
+[56:51] did go to the Entra login endpoint in
+[56:54] the in the tab there. So it did do the
+[56:56] Entra flow in the tab. It just happened
+[56:59] very quickly. Uh so now now that's
+[57:02] running and it says it has it says it
+[57:04] has two tools. Uh, so let's go ahead and
+[57:07] make sure it has access to that one.
+[57:09] Entra. Okay. So, I got three, you know,
+[57:13] three lobster on my AMX today. Okay. All
+[57:18] right. Let's see if it'll it'll go out.
+[57:22] Uh, and I did it already earlier today,
+[57:24] too. So, I can show you in the This is
+[57:27] the Entra one. So in the Entra one here,
+[57:31] my user ID is in fact my Entra
+[57:34] OID. My Entra object identifier that is
+[57:37] this user ID here. All right. So here it
+[57:40] wants to add it to the Entra server. So
+[57:44] it is calling that tool. It said it has
+[57:46] logged it. Uh we can refresh here and
+[57:50] see the new one 322 of lobster. And this
+[57:53] is my Entra object ID. So even though we
+[57:57] use the fast MCP proxy, it is getting
+[58:00] access to my Entra account, right? So we
+[58:03] are pulling out the OID from that access
+[58:06] token and using that as the user ID in
+[58:09] this Cosmos database.
+[58:14] Okay.
+[58:17] So if you want to now we've implemented
+[58:19] all of that once again in the repo. So
+[58:21] if you want to try the Entra OOTH proxy,
+[58:24] you can follow these steps to set it up.
+[58:26] It will create everything for you. Um I
+[58:29] did even automate the creation of the
+[58:30] Entra app registrations. Uh I did that
+[58:33] in the O init scripts using the
+[58:36] Microsoft Graph SDK. So you can see uh
+[58:39] when I set up the the app registrations,
+[58:41] we've got, you know, this limits it to
+[58:43] our tenant. I set up the the red eyes.
+[58:46] Uh I set up this the scope for the MCP
+[58:49] server. So all of that is set up in the
+[58:52] code. So if you want to set up something
+[58:55] similar, just take our code and uh start
+[58:59] with that as a basis um so that you can
+[59:02] then build on it for your own.
+[59:06] Uh so as you saw we were able to use it
+[59:08] and that worked. Now it is possible that
+[59:11] maybe you don't need this support by
+[59:13] arbitrary MCP clients. In that case you
+[59:16] don't have to use the proxy. You could
+[59:18] just use uh pre-registered client IDs,
+[59:21] right? Specifically, if you're doing
+[59:23] just for VS Code, there is a known
+[59:25] client ID for that. And uh you could
+[59:28] just pre-register your you know your um
+[59:32] you know that client with your Entra
+[59:34] app. Uh so there's an example uh of
+[59:37] doing that with Azure function. So that
+[59:38] same repo I showed earlier, it um it's
+[59:42] it actually has support for doing
+[59:44] pre-authorized client IDs. So, here's
+[59:46] the VS Code client ID. So, you could
+[59:48] deploy an Azure function and um and it
+[59:52] [clears throat] will work with VS Code
+[59:55] because it'll be a pre-registered client
+[59:56] ID. So, that could also be an option as
+[59:59] well. Want to throw it out there in case
+[01:00:00] that's helpful for you.
+[01:00:03] All right, we made it to the end of our
+[01:00:07] epic day about O, which had a billion
+[01:00:09] diagrams. Um hopefully hopefully they
+[01:00:13] helped. And I do recommend I mean with
+[01:00:15] OOTH I do recommend like you know just
+[01:00:17] just just really digging into it and it
+[01:00:20] helps to like you know to to read
+[01:00:22] through different documents that explain
+[01:00:24] things in different ways to actually
+[01:00:25] watch the oathful yourself and see the
+[01:00:28] URLs that that go by. Um you know
+[01:00:30] there's it oath is is can be so
+[01:00:34] complicated and uh you know it's always
+[01:00:36] fun for me to get an excuse to to learn
+[01:00:38] it more but there is always so much more
+[01:00:40] to learn. So that is the end of today's
+[01:00:44] uh session and also the end of the
+[01:00:46] series but we do have office hours right
+[01:00:48] at the series and Bernard is going to be
+[01:00:50] demoing scale kit in the office hours
+[01:00:52] that's in the discord. So I hope a bunch
+[01:00:54] of you can hop over to the discord and
+[01:00:57] join us for the office hours. Uh, and so
+[01:01:00] we'll see that demo. We'll also answer
+[01:01:01] other questions. I know I didn't have
+[01:01:03] any time today to answer questions at
+[01:01:04] all because we had so much to cover. I
+[01:01:06] really think this session needs to be
+[01:01:07] like two or three sessions in the
+[01:01:09] future. Um, so that's also come to the
+[01:01:11] office hours in order to see the demo
+[01:01:13] and also ask more questions and uh, as a
+[01:01:17] reminder, you can re-watch all these all
+[01:01:19] these videos, get the slides, get the
+[01:01:21] code. Uh, you can keep learning. We've
+[01:01:23] got our MC for beginner series that you
+[01:01:24] can go through as well. And uh yeah,
+[01:01:27] just there's so much to learn in MCP. I
+[01:01:30] think it's really exciting technology. I
+[01:01:32] I see a lot of momentum around it and uh
+[01:01:35] I I think we're going to all keep
+[01:01:37] building on it and making it great
+[01:01:38] together. So, thank you all so much for
+[01:01:42] joining. We are going to hop into the
+[01:01:45] Discord now and hope to see you there.
+[01:01:49] Bye everyone.
+[01:01:59] Thank you all for joining and thanks
+[01:02:01] again to our speakers.
+[01:02:03] This session is part of a series. To
+[01:02:06] register for future shows and watch past
+[01:02:09] episodes on demand, you can follow the
+[01:02:11] link on the screen or in the chat.
+[01:02:14] We're always looking to improve our
+[01:02:16] sessions and your experience. If you
+[01:02:19] have any feedback for us, we would love
+[01:02:20] to hear what you have to say. You can
+[01:02:23] find that link on the screen or in the
+[01:02:25] chat and we'll see you at the next one.
+[01:02:46] >> [music]
+[01:02:52] [music]
+[01:03:00] [music]
+[01:03:15] [music]

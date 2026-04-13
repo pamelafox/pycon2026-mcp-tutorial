@@ -1,0 +1,18 @@
+This session introduces Model Context Protocol from a Python developer's point of view and shows how FastMCP turns the specification into a practical server framework. It walks from MCP concepts and client architecture into a working local expense-tracking server, then covers debugging, inspection, observability, and agent integrations that consume the same server over HTTP.
+
+00:00 - Series introduction and session scope
+02:11 - Session goals and slide deck
+03:43 - Follow along with the sample repository
+04:16 - Why MCP exists
+07:32 - MCP architecture and terminology
+10:09 - MCP clients and why VS Code stands out
+15:35 - Tools, resources, and prompts
+18:00 - Building MCP servers in Python with FastMCP
+20:34 - Running a local stdio server in VS Code
+30:28 - Adding resources and prompts
+36:12 - Choosing stdio or HTTP transport
+42:52 - Development and debugging tips
+46:47 - Testing with MCP Inspector
+49:04 - Local observability with Aspire
+53:23 - Connecting AI agents to MCP servers
+59:10 - Next steps, resources, and office hours

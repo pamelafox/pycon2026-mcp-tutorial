@@ -1,0 +1,1477 @@
+[00:09] Hey everyone, thank you for joining us
+[00:11] for the first session of our Python and
+[00:13] MCP from local to production series.
+[00:16] My name is Anna. I'll be your producer
+[00:18] for this session. I'm an event planner
+[00:20] for Reactor joining you from Redmond,
+[00:22] Washington.
+[00:24] Before we start, I do have some quick
+[00:26] housekeeping. Please take a moment to
+[00:28] read our code of conduct.
+[00:30] We seek to provide a respectful
+[00:32] environment for both our audience and
+[00:33] presenters. While we absolutely
+[00:36] encourage engagement in the chat, we ask
+[00:38] that you please be mindful of your
+[00:39] commentary, remain professional, and on
+[00:41] topic.
+[00:43] Keep an eye on that chat. We'll be
+[00:45] dropping helpful links and checking for
+[00:46] questions for our presenter to answer
+[00:48] live.
+[00:50] Our session is being recorded. It will
+[00:52] be available to view on demand right
+[00:53] here on the Reactor channel.
+[00:56] With that, I'd love to turn it over to
+[00:57] our speaker for today, Pamela. Thank you
+[01:00] so much for joining us.
+[01:02] >> Hello. Hello everyone. Welcome to our
+[01:06] Python plus MCP series. This is our
+[01:09] first session in the series. This is a
+[01:12] three-part series happening this week,
+[01:14] Tuesday through Thursday. Uh so today
+[01:17] we're going to be talking about the
+[01:18] basics how to build an MCP server with
+[01:21] fast MCP which is the most popular
+[01:23] Python way of doing it. Tomorrow we'll
+[01:26] be deploying MCP servers into production
+[01:28] into Azure and also adding private
+[01:31] networking. And then on Thursday we're
+[01:33] going to show different ways of doing
+[01:35] authentication keybased access ooth
+[01:38] based access and using Entra. So, we've
+[01:42] got lots of great content for you, lots
+[01:44] of code samples, and we hope you can
+[01:46] join you join us for the whole series.
+[01:49] All of these are recorded. So, if you do
+[01:51] miss any of them, they are all available
+[01:53] on YouTube. Just go ahead and register
+[01:56] for the series and you will get emailed
+[01:59] when you know when each video is about
+[02:01] to start and afterwards when the
+[02:03] recordings are available. So, if you
+[02:05] didn't register yet, do it now.
+[02:11] So now we can get started with today's
+[02:13] topic building MCP servers with fast
+[02:16] MCP. If you want the slides, they are
+[02:20] available at this URL here which we'll
+[02:22] put in the chat uh so that you can have
+[02:25] a copy of the slides. You're welcome to
+[02:27] use them as a reference. You're welcome
+[02:28] to teach this series yourself if you've
+[02:31] got people that you want to share this
+[02:33] information with. Do whatever you'd like
+[02:35] with it. I am Pamela Fox. I'm a Python
+[02:39] cloud advocate which means that I spend
+[02:41] a lot of time trying to figure out how
+[02:43] to use Python in order to use Microsoft
+[02:47] technologies and these days it's all
+[02:49] about generative AI and all the new
+[02:52] technologies and standards like MCP. MCP
+[02:55] is kind of the biggest uh you know thing
+[02:58] of the last six months that's really
+[03:00] taken the industry by storm and we've
+[03:02] seen so many people jump on it and so
+[03:04] it's been really fun getting to work
+[03:06] with MCP so that we could make the
+[03:08] series happen.
+[03:11] So today we're going to talk about what
+[03:13] MCB is for those of you who are brand
+[03:15] new to it. Then show how we can build a
+[03:18] basic MCB server with the fast MC SDK in
+[03:21] Python. run that server in VS Code, use
+[03:24] different aspects of the server like
+[03:26] tools, resources, and prompts, debug the
+[03:28] server, inspect the server, observe the
+[03:30] server, like all these different
+[03:31] development tools you can use when
+[03:33] you're developing locally. And then
+[03:34] finally, we'll point some AI agents at
+[03:37] that server and see what they can do
+[03:40] with it.
+[03:43] If you do want to follow along, we have
+[03:45] all of our code samples in this repo
+[03:48] here. Uh so you can open that repo
+[03:51] locally. You can open it in GitHub code
+[03:53] spaces. You can fork the repo, clone the
+[03:56] repo. Uh it's got a ton of helpful code
+[04:00] in it. We're going to be using this repo
+[04:02] throughout the series. Uh so it's
+[04:04] actually got quite a lot of helpful code
+[04:08] inside. Uh so definitely bookmark that
+[04:10] repo and use that as a reference.
+[04:16] So let's start off with what is MCP?
+[04:23] So before MCP many of us, you know,
+[04:25] we're building these generative AI
+[04:27] applications like agents, chat
+[04:30] applications, workflows, that sort of
+[04:32] thing, right? And a lot of times we want
+[04:34] to integrate those applications with
+[04:37] other services, right? Like here we
+[04:39] might want to integrate with a database
+[04:41] or with Slack or with GitHub.
+[04:44] And we in in the past we would have to
+[04:47] build custom integrations for all of
+[04:51] those services, right? Like okay, we're
+[04:53] going to expose our, you know, Slack API
+[04:56] this way and expose our database this
+[04:58] way and connect to GitHub this way,
+[05:00] right? And so that meant every time we
+[05:02] wanted to bring these services into a
+[05:04] new gener application, we had to figure
+[05:06] out like, okay, how are we going to
+[05:07] bring those services in, right? And this
+[05:09] was such a common need that so many
+[05:12] people wanted to connect their
+[05:15] applications to services in really um in
+[05:20] a in a common way. So
+[05:24] that's what why they came up with the
+[05:26] model context protocol. So it is a
+[05:28] protocol that says how a model can get
+[05:32] context in order to answer questions and
+[05:36] you know achieve tasks that the users
+[05:38] wants. This protocol was originally
+[05:41] created by enthropic. Uh they created it
+[05:44] just over a year ago. So MCB just had
+[05:46] its birthday. Happy birthday. And they
+[05:49] created it as an open protocol that they
+[05:51] made originally for Claude Claude
+[05:54] desktop their application. And so you
+[05:56] could add MCP servers to you know claw
+[05:59] desktop in order to interface um you
+[06:02] know with with different services. Um
+[06:04] but it really became very popular and
+[06:07] now it's uh it's an open protocol. It's
+[06:09] part of the Agentic AI foundation. It
+[06:12] just joined it like two weeks ago and
+[06:14] that is a part of the Linux foundation.
+[06:16] Right. So the same people that are, you
+[06:18] know, in charge of Linux and making sure
+[06:20] that stays an open operating system, now
+[06:23] they've got a foundation that's got MCP
+[06:25] inside of it and making sure that MCP
+[06:28] stays uh open and and has a good
+[06:31] community about it, right? Uh so MCP is
+[06:34] the protocol that says okay you've got
+[06:37] you know you've got all these external
+[06:39] uh tools and data sources how can we
+[06:42] bring those into our um AI applications
+[06:46] in a standard way.
+[06:50] So now thanks to MCP we have that
+[06:54] protocol that is the common way that
+[06:56] services expose themselves right. So the
+[06:58] database exposes itself as an MCP
+[07:00] server. Slack exposes itself as an MCP
+[07:03] server. GitHub uh has an MCP server as
+[07:06] well right and then that means any
+[07:08] application that understands MCP can act
+[07:12] as an MCP client and interface with any
+[07:15] of these MCP servers over this MCP
+[07:19] protocol.
+[07:20] And that has opened up much, you know, a
+[07:24] bigger world of possibilities and made
+[07:25] it just easier for people to start
+[07:27] plugging things into each other.
+[07:32] So let's talk about the MCP architecture
+[07:35] and some terminology around MCP to uh to
+[07:39] understand you know how how it uh how
+[07:41] everything's structured. So we have MCP
+[07:45] servers over here, right? So these MPC
+[07:47] servers that's something like the GitHub
+[07:49] server right so the GitHub MCP server it
+[07:52] can expose tools prompts and resources
+[07:55] right now tools is what most people
+[07:56] think of when they think of MCP servers
+[07:58] right so with the GitHub server you
+[08:00] would have a tool like add comment to
+[08:02] issue or uh read uh read pool review
+[08:06] right uh so different tools in order to
+[08:09] do common things uh you know with that
+[08:12] with that service uh now the servers can
+[08:14] also expose prompts
+[08:16] and resources and we'll see uh you know
+[08:19] what those actually look like when we
+[08:20] when we code them up but most of you
+[08:22] when you think of MC servers you
+[08:24] probably are thinking about their tools
+[08:26] because that is what uh the clients use
+[08:29] in order to be able to you know get the
+[08:31] job done. So then on this side over here
+[08:35] we've got MCP clients that connect to
+[08:37] servers and these MCP clients often sit
+[08:40] inside what we call like an MCP host. So
+[08:43] an MCP host is something like cloud
+[08:46] desktop, GitHub copilot. Uh even chat
+[08:48] GBT recently added support for MCP in
+[08:52] like developer mode. Like I think you
+[08:54] get like a big message that says danger
+[08:56] danger, right? Uh I mean it's there
+[08:58] there definitely is a danger, right?
+[08:59] Because as soon as you start connecting
+[09:02] these applications to MCP servers, you
+[09:05] are empowering that application with
+[09:07] more functionality, especially if your
+[09:09] MCP server is an authenticated server
+[09:11] that has access to your own data. So
+[09:14] there definitely is a risk uh whenever
+[09:17] you you know give more functionality to
+[09:20] uh an agent or application, but there's
+[09:22] also can be a huge benefit, right? And
+[09:25] so that's that's you know always the
+[09:26] debate a lot with all this you know new
+[09:28] generative AI stuff is like okay like we
+[09:30] can get this huge benefit from being
+[09:32] able to uh you know customize our
+[09:36] environment with all these MCB servers
+[09:37] that have access to all this interesting
+[09:39] data um useful user data. Uh but there
+[09:43] is always a risk that we need to keep in
+[09:45] mind there.
+[09:50] So so there we go. So we have this this
+[09:53] architecture here and so you know within
+[09:54] an MCP host it can that host can connect
+[09:57] to multiple servers and can use the MCP
+[10:00] protocol to communicate with those
+[10:02] servers.
+[10:09] Now what actually are MCP clients? So
+[10:12] there's quite a long list of them on the
+[10:15] model context protocol website and it
+[10:18] gets longer all all of the time here
+[10:21] right um so I decided question there was
+[10:23] just a question about Microsoft copilot
+[10:25] right so you can see that Microsoft
+[10:26] copilot studio is an is an MCP client or
+[10:31] you know basically has MCB client
+[10:32] ability inside of it um the one that
+[10:35] we're really going to be using today is
+[10:37] VS Code with GitHub Copilot notice how
+[10:39] it has look at all these checks do you
+[10:41] see all these checks here, that means it
+[10:43] is fully compliant with all aspects of
+[10:47] MCP. And if you look at most of the
+[10:49] other clients, it's rare to see that
+[10:52] many green check marks. I'm not sure if
+[10:54] there's Let's see if there's any. I
+[10:56] think there's one more. Okay, fast agent
+[10:59] has all the check marks. Um,
+[11:03] and that's it. Um, so so that's one
+[11:07] reason why we're using VS Code. We're
+[11:09] also using VS Code just because we love
+[11:10] VS Code. But um you know, so that's the
+[11:13] thing about MP clients, right? The M the
+[11:15] the the protocol is actually quite a
+[11:18] large protocol now. There's a lot of
+[11:19] different parts to it. And so many
+[11:22] clients support tools, right? That's
+[11:23] what most people think of. They think of
+[11:24] tools. And so you see here, every single
+[11:27] client here has a check mark for tools.
+[11:30] But then there's all these other
+[11:31] aspects, resources, prompts, discovery,
+[11:34] sampling, roots, elicitation,
+[11:35] instructions, and that's where there's a
+[11:38] lot more um variability in terms of
+[11:40] support. But VS Code prides itself in
+[11:44] being fully compliant with the MCP spec
+[11:46] with all the parts. Uh so uh generally
+[11:49] it's one of the first clients to adopt
+[11:51] features and it can be a great uh
+[11:54] developer playground when you're
+[11:55] developing your own server and you want
+[11:57] to test to make sure a particular
+[11:59] feature works.
+[12:06] So we'll be using VS Code today in order
+[12:08] to test the servers. And with VS Code
+[12:12] you can test your own servers. You can
+[12:14] also install other people's servers.
+[12:16] Right? So, if you go to the extensions
+[12:19] marketplace
+[12:21] and you can search for uh you can
+[12:24] actually search at MCP and that'll get
+[12:26] you all the MCP servers back that are in
+[12:28] the gallery. These servers, I believe
+[12:31] these have all been vetted um you know
+[12:34] being in the gallery here or at least
+[12:36] being in the gallery means they can be
+[12:37] kicked out of the gallery if we do
+[12:39] detect any security issues with them. Uh
+[12:42] so this is one way you can find servers.
+[12:44] There's thousands and thousands of MCB
+[12:46] servers that you can find on the web as
+[12:48] well. But these are the ones that uh
+[12:51] that are currently in the gallery that
+[12:53] are fairly popular and you know that
+[12:56] don't have any known um you know known
+[12:58] security issues here. So if you're
+[13:00] interested in any of them you can you'll
+[13:01] click install and then you can start uh
+[13:04] start using them. So let me install
+[13:07] this one. So this is Microsoft Learn MCP
+[13:11] server. This is a server that can access
+[13:13] learn.microsoft.com which is where all
+[13:15] the documentation is. So it's a really
+[13:17] helpful server if you do use any uh
+[13:19] Azure or Microsoft technologies because
+[13:21] it can go and actually look for
+[13:23] up-to-date information. So you see
+[13:25] there's a few different ones for
+[13:26] documentation. Another one that people
+[13:28] like is context 7 that has documentation
+[13:30] for a lot of open-source projects,
+[13:33] right? Um, so very common to install an
+[13:36] MCP server that gives you up-to-date
+[13:37] access to MCP servers uh for the latest
+[13:42] information about something.
+[13:46] Uh so then once you have a server
+[13:48] installed then you can go and actually
+[13:50] use that server from uh from GitHub
+[13:53] Copilot. Right? So you can see here I've
+[13:56] got um all the built-in tools but then
+[13:58] I've got servers like Azure MCP. I have
+[14:00] that disabled right now. I've got the
+[14:02] Bicep MCP server. Um, I've got the
+[14:05] Python MCP server. And then here's the
+[14:08] Microsoft Docs MCP server. That's the
+[14:10] one I just installed. Uh, so now I could
+[14:13] talk something like, all right, does as
+[14:15] your container apps support serverless
+[14:20] GPUs? You know, what does Learn say? All
+[14:22] right, here I'm going to I'm trying to
+[14:24] get it to
+[14:26] encourage it to use that MCP server. So
+[14:28] one interesting thing is that once you
+[14:29] have lots of MCB servers installed in uh
+[14:32] you know in an environment like GitHub
+[14:34] copilot then the agent has to decide
+[14:37] which of those tools are going to be
+[14:39] useful to call and sometimes the agent
+[14:42] might not realize that a particular tool
+[14:43] is useful to call and that is one of the
+[14:46] tricky things about MCB servers right
+[14:48] like if you add you know more and more
+[14:50] dozens of MCP servers then you're
+[14:53] telling GitHub Copila like hey you know
+[14:55] you're telling the LM like hey you've
+[14:57] got hundreds of different tools to use
+[15:00] and then the LLM has to decide, oh,
+[15:01] which of those tools I'm going to use.
+[15:03] So, in this case, it did actually use
+[15:05] what I wanted to use. It it decided to
+[15:07] um use this MCP server, the Microsoft
+[15:10] Docs MCP server, and it passed in this
+[15:13] query, and then we it got back these
+[15:15] results, right? Um and uh and so this
+[15:19] is, you know, this is great because now
+[15:20] we get up-to-date information here.
+[15:24] So that's how we can use MCP servers,
+[15:27] other people's MCP servers, you know,
+[15:29] inside a uh MCP host like VS Code.
+[15:35] Uh but what we're going to be doing
+[15:36] today is actually building our own and
+[15:37] using that inside VS Code. And uh and I
+[15:40] know folks are easy eager for that and
+[15:42] we're going to get into that. So if
+[15:45] we're building a server, what are the
+[15:47] actual components of an MCB server? So
+[15:50] the big big component is tools. That is
+[15:52] what so many people think of when they
+[15:54] think of MCP servers. Uh so for example,
+[15:56] the tool that just got called was this
+[15:59] um searching tool that knew how to
+[16:02] search the docs. And you can see for
+[16:03] each MCP server, I can expand it and you
+[16:06] can see okay, this server knows how to
+[16:07] look for samples uh like search the
+[16:10] samples gallery. It knows how to fetch
+[16:11] an entire documentation page and it
+[16:14] knows how to search the docs. So with my
+[16:17] most recent query, it decided to call
+[16:19] this search docs function. And it
+[16:21] decides that based off of the name of
+[16:23] the function and the description of the
+[16:26] function, right? You see when I mouse
+[16:28] over here, you can see this there's long
+[16:29] description of the function. So whenever
+[16:32] GitHub copilot is processing a question
+[16:35] for me, it is looking at all my enabled
+[16:38] tools. looking at the names and
+[16:40] descriptions and arguments for them,
+[16:42] sending those into LLM, and the LLM is
+[16:45] deciding which of those tools are most
+[16:48] appropriate to help answer the question
+[16:50] and then calling those tools in turn.
+[16:56] And you know, I was saying like
+[16:58] sometimes it may not call the server you
+[17:00] want. In that case, you know, you can
+[17:02] check off everything but that server.
+[17:04] But more effective is just to say like
+[17:05] you know use the like if it's really not
+[17:08] using the server you want to use you can
+[17:09] say like oh use Microsoft docm server
+[17:12] and at that point when you call it by
+[17:14] name it's it's going to do it right uh
+[17:17] you can also try changing models right
+[17:19] some models are better at tool selection
+[17:22] than other models right so I generally
+[17:25] alternate between opus 4.5 and GPD5
+[17:28] they're both quite good at tool calling
+[17:30] um but that's something to keep in mind
+[17:31] is that if you're you know if you're
+[17:32] using an agent and you don't feel like
+[17:34] it's doing a good job selecting tools
+[17:36] and coming up with arguments for the
+[17:37] tools, you may want to switch agents and
+[17:39] see if it does a better job.
+[17:42] So, MCB servers have tools. Uh they also
+[17:45] have resources which is like basically
+[17:47] like static context that is is useful
+[17:51] and doesn't require like an argument.
+[17:53] And then they have prompts which are
+[17:54] like helpful prompts that you you know
+[17:56] users may want to use a lot and not have
+[17:58] to write themselves.
+[18:00] So now let's actually build an MCB
+[18:03] server in Python.
+[18:09] The first question is how are we going
+[18:11] to build it? Now you could build it
+[18:13] entirely from scratch by actually
+[18:15] reading the specification and adhering
+[18:17] to the specification. I do not recommend
+[18:19] that. I'm not going to recommend that
+[18:20] anybody does that. Um I think you should
+[18:23] use one of the official um or uh popular
+[18:28] SDKs. Right. So the Python-S SDK, this
+[18:31] is the official Python SDK. It's part of
+[18:33] the model context protocol protocol uh
+[18:36] GitHub organization and it tries to stay
+[18:39] as close to the spec specification as
+[18:42] possible. So whenever there's something
+[18:43] new in the specification, it gets added
+[18:46] to this SDK.
+[18:48] So that can be uh a really helpful SK.
+[18:51] However, what we're going to be using
+[18:54] and what I'll be recommending is fast
+[18:56] MCP. It is a framework built on top of
+[18:59] the SDK. So, it has all the
+[19:00] functionality that's in the SDK, but it
+[19:03] also adds in a lot more helpful
+[19:05] functionality, right? So, it's got stuff
+[19:07] like integration with Entra, uh, which
+[19:10] is great for, you know, those of us who
+[19:11] are using Entra. It's got integration
+[19:13] with like 15 other off providers as
+[19:16] well, right? So it's trying to make it
+[19:18] really easy to do the most common um
+[19:20] things that people want to do like
+[19:22] making it easier and integrate with fast
+[19:23] API making it easier to deploy into
+[19:25] production making it easier to do
+[19:27] logging to do open telemetry. Right? So
+[19:30] there's a lot more additional features
+[19:32] in that fast MCP MCP SDK and that's why
+[19:36] we're going to be using that one and
+[19:37] that's what I'll be recommending.
+[19:44] So when we use fastmcp, we're going to
+[19:47] be able to write our servers in a very
+[19:49] pythonic way, right? We're going to be
+[19:51] using decorators. We're going to use
+[19:52] Python type hints. We're going to use
+[19:54] async. Uh we're going to be able to get
+[19:57] fancy with our tool annotations. And
+[20:00] we'll have all the options that we need
+[20:02] for building a server.
+[20:05] So let's try out our sample server. Now
+[20:08] this is from the repo. So once again, as
+[20:10] a reminder, if you do want to follow
+[20:12] along with the code, go to um py
+[20:15] aka.ms/python-mcp-demos.
+[20:19] That will bring you to this as your
+[20:22] samples repo. Python-mcp-demos
+[20:25] and that has all the code that uh we'll
+[20:29] be showing today.
+[20:34] So
+[20:35] let's go ahead and see how we can run a
+[20:40] local server. So we already have a
+[20:42] server written. It is uh the first one
+[20:45] we're going to be working with is this
+[20:46] one basic_mcp_stdio.
+[20:51] And uh you can see this is using the
+[20:53] fast mcp package. So in order to use
+[20:57] this server, I'm going to open up the
+[21:00] mcp.json JSON configuration file that
+[21:03] says in my VSC code folder. And you can
+[21:06] see there's a few different existing
+[21:08] configurations. And you can also see a
+[21:09] button here to add a server. So if you
+[21:12] wanted to add a new server for testing
+[21:14] out, you could click this button and it
+[21:16] would, you know, go through a wizard to
+[21:18] help you add another server to this. Uh,
+[21:21] of course, it's also JSON. You can copy
+[21:23] and paste and add it this way. So we're
+[21:26] going to start up this server here.
+[21:30] Uh so you can see that it's going to use
+[21:32] UV. UV is a tool for running Python
+[21:37] programs and managing Python
+[21:38] environments and it is very popular with
+[21:41] the MCP community. So you'll see a lot
+[21:43] of use of UV with these um local MCP
+[21:46] servers especially. So we're using UV
+[21:49] and it's saying you so it's basically
+[21:51] going to call this command. So this is
+[21:52] what's called a standard input output
+[21:55] server. So it's basically just accepting
+[21:58] a you know a shell command and running
+[22:01] running that command here. Right? So
+[22:04] it's going to run this command here
+[22:07] whenever we tell it to run the server.
+[22:09] Uh so we don't actually have to run it
+[22:11] in the terminal because just by clicking
+[22:13] start VS Code ran this command for us.
+[22:17] So it actually it says it's already
+[22:18] running. Uh it says it's got one tool
+[22:21] and one prompt. So that's good. That's
+[22:23] what I expected.
+[22:25] And now the next step is going over to
+[22:28] my co-pilot chat and clicking on this
+[22:32] little tools menu right here. So when I
+[22:35] click on this,
+[22:37] I can see all the possible um MCP
+[22:41] servers that are known. And what I'm
+[22:44] going to do is check this one on. So
+[22:47] this is the one that we just toggled on.
+[22:49] And we can see it has one tool
+[22:50] underneath it, the add expense. And so
+[22:53] we toggle that one on so that co-pilot
+[22:56] knows that it can, you know, use this
+[22:58] tool.
+[23:02] All right. So now now it's started. It's
+[23:06] got one tool. Uh we can also look at the
+[23:09] output. So it's I like to put up the
+[23:12] output window here. So see if you go to
+[23:13] the more then you see stop server,
+[23:15] restart server, show configuration, show
+[23:17] output. So it's helpful to show the
+[23:19] output sometimes just to see if there's
+[23:21] any errors.
+[23:22] Um, and there we go. So now let me open
+[23:26] this file
+[23:29] again so we can take a look at the tool.
+[23:31] So this is an expense tracking MCB
+[23:34] server. Its whole job is to track
+[23:36] expenses. Uh, locally is just storing
+[23:40] them in a CSV. Once we go to production,
+[23:42] we'll store it in Cosmos DB. Uh, but for
+[23:45] now, we're just storing in this simple
+[23:46] CSV file here.
+[23:50] And we have this tool here. So in order
+[23:53] to write a tool, we use this decorator
+[23:57] mcp.tools. So this is what's called a
+[23:59] decorator in Python is when you have at
+[24:02] and uh then the name of the decorator.
+[24:04] So we're saying okay this function is a
+[24:06] tool and then we can see the function
+[24:09] signature. The function header here it
+[24:11] has a name and then it has the arguments
+[24:14] that it takes. So this tool here, this
+[24:17] function takes a date, an amount, a
+[24:20] category, a description, a payment
+[24:21] method. Now you what's important is to
+[24:24] like look at each of these type
+[24:26] annotations. So I could have been really
+[24:28] simple and just said date, but then then
+[24:32] the um agent would only know that this,
+[24:36] you know, the name and the type. I like
+[24:38] to get really fancy and say, okay, it's
+[24:40] a date and it's type date and here's a
+[24:43] description of it. Right? So here I said
+[24:45] oh it should be in this format right and
+[24:47] with amount it's a float and it's a
+[24:49] positive numeric amount of the expense
+[24:51] category is an enume which is fun. So an
+[24:55] enume is a way in Python to have a
+[24:58] possible set of values, right? So here
+[25:00] we say these are the only possible
+[25:03] values that this argument can take on,
+[25:06] right? So it's either got to be, you
+[25:08] know, one of these five values. So
+[25:10] that's the, you know, one of those
+[25:12] values. There's description. Description
+[25:14] is a string and that's the description
+[25:17] of that one. And payment method is
+[25:18] another enu. It's one of these values
+[25:22] and there's description. Right? So it
+[25:24] really helps to get very specific in
+[25:28] your uh in your in your function changer
+[25:30] here because all of this information is
+[25:33] going to get sent to whatever
+[25:36] application is using this this MCB
+[25:38] server right so in this case all of that
+[25:40] information is going to get sent to the
+[25:42] LLM used by GitHub copilot right so it
+[25:45] will be able to see the name of the
+[25:47] argument the type of the argument and
+[25:49] the description of the argument so I do
+[25:51] recommend you using annotated ated types
+[25:54] in order to fully describe your tools
+[25:57] arguments.
+[26:01] All right? And then you know it gets in
+[26:02] all those args and you know the the um
+[26:06] you know and then it it processes this
+[26:08] code. Now none of this code is ever
+[26:10] exposed to the the actual like you know
+[26:12] GitHub copilot LLM, right? It only sees
+[26:15] the description of the function, not how
+[26:17] it's implemented. Uh so how it's
+[26:19] implemented is you know opens the CSV
+[26:21] and it it writes the file to the CSV
+[26:25] but all that the agent cares about is
+[26:27] okay you know what what are the tools
+[26:29] and what are their arguments. So now
+[26:32] what I can do is uh once again I'll make
+[26:35] sure that we've got it enabled and then
+[26:37] I'll go here and say like okay I bought
+[26:39] a
+[26:42] $222
+[26:44] today on my corporate MX for
+[26:49] >> [clears throat]
+[26:49] >> um for a uh conference.
+[26:53] Here we go.
+[26:55] All right. So here I put something in
+[26:57] the chat that hopefully should trigger
+[27:02] the LM here to think okay maybe I should
+[27:05] use this expense server right and you
+[27:08] can see that it's like thinking about it
+[27:09] and it during its thinking process it
+[27:11] found the server right and you can see
+[27:13] here this is the name of the tool it
+[27:15] wants to run this is the name of the
+[27:17] server that we enabled right remember
+[27:20] that's in our MCP.json JSON right
+[27:22] expense is MCP expense is MCP
+[27:26] uh the ad expense matches what's in our
+[27:28] our actual code and these are the
+[27:30] arguments that it wants to send now the
+[27:33] LLM in this case GVD5 is the one that
+[27:36] decided on the arguments right so it
+[27:38] looked at this tool and said oh okay you
+[27:41] know based off the user's query and
+[27:43] based off the arguments that this uh you
+[27:46] know tool expects I'm going to pass in
+[27:48] this date uh which is today uh this
+[27:51] amount account, this category, and this
+[27:53] description, and this payment method,
+[27:55] right?
+[27:56] And here we see that it's asking for
+[27:58] permission. Um, and that's a nice thing
+[28:01] about VS Code is that by default, it
+[28:03] does ask for permission with actions
+[28:05] like this from MCB servers. And we have
+[28:07] these options here where we can we have
+[28:09] a lot of options, right? We can say
+[28:11] allow in this session, in this
+[28:12] workspace, always allow, allow tools
+[28:14] from expense tracker, right? So, tons of
+[28:17] options. Uh, you can also just always
+[28:19] click allow. Uh in this case I just
+[28:21] always click allow but VS code tries to
+[28:23] give a lot of options for um you know
+[28:26] how how you want to how much you want to
+[28:29] trust particular tool calls.
+[28:33] Uh so then it added the expense and if
+[28:36] we check our CSV file we can see that
+[28:38] indeed it added the expense here at the
+[28:42] end of the CSV file.
+[28:44] So once again that was by how it you
+[28:48] know it did that by calling the tool and
+[28:51] so if you wanted the tool to have more
+[28:53] functionality you would you know you
+[28:56] could change the annotations um you can
+[28:58] change the descriptions right there was
+[29:00] a question about like you know could the
+[29:02] date be submission um versus billing
+[29:05] date right like you know so this you
+[29:07] might want to say like oh billing date
+[29:08] right so basically like you keep on you
+[29:11] know as you like see the you want to
+[29:13] like monitor the requests that come in
+[29:14] and you want to see what it gets right
+[29:16] and what it messes up on and then you
+[29:18] can decide whether you have to be more
+[29:20] specific with your annotations and
+[29:22] whether you might need to add more
+[29:23] arguments. You can have optional
+[29:25] arguments too. you may you know that may
+[29:27] be something you want to do because
+[29:28] maybe sometimes uh people specify
+[29:31] information and the cool thing is that
+[29:32] since it is an agent it can also ask the
+[29:35] user for clarification right so if I say
+[29:37] like I also bought you know um a $20
+[29:42] pizza now it might it's either going to
+[29:46] assume that I use ammex or it could go
+[29:49] back and and actually like ask me like
+[29:51] wait what did you buy in that right
+[29:52] because that's the thing we are working
+[29:54] with an agent here agent students can
+[29:56] you know they can they can iterate they
+[29:58] can reflect they can decide to ask um
+[30:01] you know followup now in this case I
+[30:03] think it decided it decided it was AMX
+[30:05] again so it didn't decide it didn't ask
+[30:07] me u but in theory it could ask if it if
+[30:11] it had any doubt about uh the arguments
+[30:17] all right so now we've seen tool and you
+[30:20] know that's really what um you know
+[30:23] where you know the real heart of MCB
+[30:24] servers right now but there are other
+[30:26] functionalities that we can do as well.
+[30:28] So let's check out resource. So here is
+[30:31] the resource. This one we've decorated
+[30:33] with atmcp.resource
+[30:36] and we've basically come up with a URI
+[30:38] for the resource and we say oh this is
+[30:40] you know this is the resource we're
+[30:42] exposing here and all this is doing is
+[30:45] reading in the entire CSV and just
+[30:47] returning it right. Um
+[30:50] and the you know interesting thing here
+[30:53] is that now we can basically refer to
+[30:55] this like as like a static document. So
+[30:57] the resources could be useful for
+[30:59] servers if there's kind of like
+[31:00] documentation attached to them that
+[31:03] people might just want to um you know
+[31:05] add add to their conversation.
+[31:08] Now the way that you actually do it is
+[31:10] you go to um this little button here. So
+[31:14] right now it's a paper clip. Sometimes
+[31:15] it says add context depending on whether
+[31:17] you already have context, right? So here
+[31:19] I already have context so it's now a
+[31:21] paper click but it's basically the add
+[31:23] context button and when you open it you
+[31:24] can see all the possible context sources
+[31:28] that VS code can use and so one of those
+[31:30] is MCP resources. So we select this
+[31:34] and then we can see the uh the resource
+[31:38] and we only um actually we have a few oh
+[31:40] look there's also ones exposed by the
+[31:42] GitHub server. So the GitHub MCB server
+[31:44] does also expose resources. That's I
+[31:46] think the only other MCB server that
+[31:48] I've seen that exposes resources, but um
+[31:51] you know, but that can be helpful. So
+[31:53] here um I'm going to select this one.
+[31:56] And so it basically just attaches it to
+[31:57] the conversation, right? And then I can
+[31:59] be like, okay, analyze my expenses and
+[32:02] tell me what's the biggest expense.
+[32:07] Right? So now I can ask that question
+[32:09] because I know it has this expense
+[32:12] expense information attached.
+[32:15] Now, in reality, I probably wouldn't
+[32:17] have a resource like this for an expense
+[32:18] tracker because expenses
+[32:21] like it feels like getting your expenses
+[32:22] should be more of a tool than a
+[32:24] resource. Um, but it's it's something
+[32:27] you can use if it makes sense for your
+[32:29] server to expose resources.
+[32:33] And here we go. So, it you know, it
+[32:35] analyzed it and answered the question,
+[32:38] right? The next thing that we can do is
+[32:42] a prompt, right? So prompts are helpful
+[32:46] if you're, you know, if you find that
+[32:48] users are commonly doing the same things
+[32:51] over and over with a server and you just
+[32:53] want to make it easy for them to, you
+[32:56] know, just be able to like just run a
+[32:58] prompt and it'll just do it, right? Um,
+[33:00] and prompts are interesting because they
+[33:02] can also be templatized, um, optionally
+[33:05] if you want. So this prompt will do like
+[33:07] this analyze spending patterns thing.
+[33:10] So, the way to trigger a prompt is
+[33:13] you're going to say slash. And when you
+[33:15] do slash, you see all the possible
+[33:17] prompts that are exposed by your other
+[33:20] MCB servers and extensions. So, here I'm
+[33:24] going to select the one from the current
+[33:27] server, which is this one. Expenses on
+[33:28] MCP analyze spending.
+[33:31] and it pops up uh asking me for for um
+[33:37] possible values for these um arguments
+[33:40] here. Uh but these are all optional. So
+[33:43] I can also just go like this. Enter
+[33:45] enter enter and boom. Uh so here's the
+[33:48] prompt
+[33:50] and now you know so now I've got that
+[33:53] prompt and it's doing a little analysis
+[33:57] now uh based off that prompt and you
+[34:01] know it's got access to the expenses
+[34:03] still from this conversation
+[34:08] and it's doing a lot of thinking here
+[34:10] because we asked it for a big old big
+[34:12] old analysis because it's all set
+[34:15] reviewing. Now, now it's going through
+[34:16] each of them. I thought there's a
+[34:18] question, can a resource be implemented
+[34:20] as tool? Yeah. So, interestingly, for
+[34:23] the subsequent sessions, I did actually
+[34:25] turn this resource into a tool because I
+[34:27] just I just felt like especially once we
+[34:29] added user authentication, it it didn't
+[34:32] make sense for it to be a resource
+[34:33] anymore because it needed to be user
+[34:34] specific. So, I I turned it into a tool.
+[34:37] Uh so I would I think most of the time
+[34:42] you uh you want to expose everything as
+[34:45] a tool. There may be some additional
+[34:48] things that it makes sense to also
+[34:50] expose as a resource. Um but I think
+[34:54] because most people don't know about
+[34:56] resources, it's kind of a chicken age
+[34:57] problem. Like most people don't know
+[34:59] about resources and that you can
+[35:01] actually you know easily attach MCB
+[35:03] resources to a conversation. Um, so
+[35:07] given that most people don't know about
+[35:08] resources and that they're not exposed
+[35:11] to the agent, that's why I would tend to
+[35:13] always expose everything at least as a
+[35:15] tool and then maybe add on some
+[35:17] resources as well if you've got, you
+[35:19] know, super users that are actually
+[35:21] using them.
+[35:25] All right. So then we got a big old
+[35:27] analysis here based off of that prompt.
+[35:34] Okay.
+[35:35] So, so there we have the local MCP
+[35:38] server working with tools, resource and
+[35:40] prompts. Now, keep in mind this is a
+[35:42] very simplified server in order to show
+[35:45] something working locally, you know,
+[35:46] just saving to the CSV. In the
+[35:49] subsequent sessions, we will, you know,
+[35:51] actually save it into a Cosmos DB
+[35:53] production database and then we'll even
+[35:55] add user authentication so we can tie
+[35:56] expenses to user ids uh to like their,
+[36:00] you know, Entra identity or or other
+[36:02] identities, right?
+[36:04] Um but uh you know this is to show you
+[36:06] the basics of how you would set up a
+[36:08] fastm server.
+[36:12] All right so we saw tool resource
+[36:15] prompt.
+[36:16] Now this server was running using
+[36:18] standard input output right. So if you
+[36:20] remember that mcp.json
+[36:23] uh we were using uv in order to run that
+[36:27] python command. So there are many
+[36:29] servers that run locally using stdio
+[36:33] using if they're a python server it's
+[36:35] usually uv run. If they're a javascript
+[36:38] server or typescript server it's usually
+[36:40] a um npx command right here you might
+[36:43] see npx instead. Uh like for the
+[36:46] playright server that one uses npx.
+[36:50] So that is what's called an stddio or
+[36:52] standard input output. And basically
+[36:55] like anything that you can run with a
+[36:57] command in a terminal that's a standard
+[37:00] input output server. So this can be
+[37:03] really helpful because you know as long
+[37:05] as you can run it locally then you know
+[37:07] then you can run the server. However
+[37:09] that does mean you have to be able to
+[37:10] run it locally. And I will tell you that
+[37:12] for me like okay my UV is working
+[37:15] correctly here. Uh but I had an incident
+[37:18] last week where in like VS Code insiders
+[37:21] I couldn't use UV like that the path
+[37:23] wasn't right and then I tried to install
+[37:24] the playwright server and then my npx
+[37:26] was wrong because of npm install and
+[37:28] blah blah blah. So like as soon as you
+[37:30] you're requiring uh you know like
+[37:33] commands to work that means people have
+[37:35] to have an environment that supports
+[37:37] those commands right so it means my you
+[37:39] know my python install has to be correct
+[37:41] my UV install has to be correct my uh
+[37:44] node has to be correct for the npx ones
+[37:46] right uh so there is a bit of a barrier
+[37:50] there that can happen when you're using
+[37:53] stdiodio
+[37:55] and um you know and so I think it's
+[37:58] great to get started with. Um, but
+[38:01] generally I prefer HTTP servers and
+[38:04] definitely for production I would
+[38:07] recommend an HTTP server. So that's what
+[38:10] I'm going to show next is how can we run
+[38:13] an MCP server basically as like a a
+[38:16] proper server over HP protocol.
+[38:23] So uh what does this actually look like
+[38:25] in in the code? Um, so if we go to the
+[38:30] uh this other file basic mcp http.py
+[38:36] uh what you'll see is at the bottom when
+[38:38] it calls mcp.run
+[38:41] it's defaulting to the http transport
+[38:45] instead of the standard input uh
+[38:48] transport. So you can see the options
+[38:49] are stdioddio ss or streamable hv. uh we
+[38:53] SSC was the original uh an original HP
+[38:56] option but it's kind of been deprecated
+[38:59] in in favor of streamable HP. So that is
+[39:02] what this one uh wants to run over
+[39:06] instead right and the rest of the code
+[39:09] is pretty much pretty much the same. Uh
+[39:13] it's really this last line here that's
+[39:15] that's different.
+[39:17] Now the next steps that different is
+[39:19] that we do actually have to first
+[39:21] explicitly run this file and get the
+[39:24] server running because VS Code isn't
+[39:26] going to know how to run the server. So
+[39:28] we're going to say UV run servers basic
+[39:32] mph. py
+[39:35] and um okay let's see
+[39:42] I was trying to let me let me take
+[39:44] something out of the here. Okay.
+[39:51] I'm just going to restart that server.
+[39:58] Okay. All right. Let me rerun it here.
+[40:03] Okay. So, we can see that the server is
+[40:05] starting HP mode on port 8000. So, now
+[40:09] this server is running at localhost
+[40:11] 8000/MCP.
+[40:15] And we can see that here it's it says
+[40:17] here this is where it's running. So now
+[40:20] it's running at that URL and it is ready
+[40:22] to receive MCP requests. Uh let's see if
+[40:26] we go in the browser uh we'll just get
+[40:28] an error because it's it's expecting to
+[40:31] get uh you know a properly formatted MCP
+[40:33] request. But we do see that it is
+[40:34] running something at this at this port.
+[40:38] So then how we use it is we're going to
+[40:41] stop the the uh the server we were using
+[40:44] before the standard input output server.
+[40:47] Then we're going to start
+[40:50] this one here.
+[40:52] And this one you can see it says type
+[40:55] HTTP and URL. So all VS Code knows is
+[40:59] that this is an HP server running at
+[41:01] this URL. It doesn't know how that
+[41:03] server got started. This server could be
+[41:05] written in JavaScript, C, Python,
+[41:07] whatever. Right? All it knows is that
+[41:08] there is an MCP endpoint at this URL
+[41:11] ready to accept MCP requests. And we can
+[41:15] see it did find that it has one tool and
+[41:18] one prompt.
+[41:21] So now I'm going to start a new chat
+[41:24] here. I'm going to open up my C-pilot
+[41:26] tools. I'm going to deselect the old
+[41:28] server. And now I'm going to select the
+[41:31] HTTP server.
+[41:33] and then say, "Okay, I got a $200
+[41:37] seafood platter on my MX today."
+[41:42] Okay,
+[41:44] so hopefully
+[41:47] um and we can also watch now they're
+[41:49] running the server, we can actually
+[41:50] watch MCP requests going over the server
+[41:52] here. So you can see there's lots of
+[41:54] lots of um JSON being sent to this MCP
+[41:58] endpoint here. Different, you know, get,
+[42:01] post, delete, etc.
+[42:04] Uh so here we go. And this time you can
+[42:06] see it selected the expenses MCP HTTP
+[42:11] server instead, right? Because we we
+[42:14] stopped the other one. Um let me stop
+[42:16] this one too. Um and so now this is the
+[42:19] one running and this is the one enabled.
+[42:22] So we're going to say allow. And now we
+[42:24] can see the logs in our server.
+[42:27] And so we can see that it successfully
+[42:29] added it using the server.
+[42:32] Uh so this is a server running over
+[42:34] HTTP. And this is what uh you know
+[42:37] generally recommend and um definitely
+[42:40] what we'll be using when we deploy these
+[42:43] servers into production for the next two
+[42:46] sessions.
+[42:52] All right. So now let's look at a few
+[42:54] development tips for MCP servers.
+[42:59] So the first one that I think is really
+[43:01] cool is that in VS Code, we can actually
+[43:03] do breakpoint debugging. Uh I don't know
+[43:06] how many of you use the breakpoint
+[43:08] debugger, but I love the breakpoint
+[43:11] debugger when I'm having some like
+[43:13] really really thorny issue and I just
+[43:15] want to see what happens at every
+[43:17] single, you know, line in my program,
+[43:19] right? Like how do the variables change?
+[43:21] That's the big benefit of breakpoint
+[43:22] debugging. So, uh, so what's cool is
+[43:25] that you can do breakpoint debugging
+[43:27] with VS Code servers. Uh, so we, uh, you
+[43:30] have to add a configuration. Um, we
+[43:33] added a configuration for that in
+[43:35] launch.json,
+[43:37] uh, so that it can, uh, it can attach to
+[43:40] it. So, in order to show this, I'm going
+[43:43] to stop these servers. I'm going to
+[43:46] start this debug server here because
+[43:48] we're starting it off in a special mode
+[43:51] where we're enabling the Python
+[43:53] debugger. And so here I'm actually I'm
+[43:56] doing it for the standard input output
+[43:58] server, but you you can actually do it
+[44:00] um for HP servers too. All right. So we
+[44:03] can see this one is running. And then
+[44:05] what I do is I open up uh I open this up
+[44:09] and you can see I've got break points.
+[44:10] So breakpoints is where you want the
+[44:12] debugger to stop. So I can add a break
+[44:14] point to any line where I want the
+[44:17] debugger to to stop. Right?
+[44:21] All right. So now I've got break points.
+[44:23] Then I go to the debugger over here. And
+[44:25] you can see there's one debug
+[44:27] configuration. So I start that up. And
+[44:29] that starts the VS Code debugger.
+[44:34] And now that is running. And now we're
+[44:37] going to go here and check to see that
+[44:40] we have the debug one enabled. Okay, so
+[44:44] everything's sorted. We've got break
+[44:45] points. We've got this one running.
+[44:46] We've got the debugger started. And
+[44:49] we've got the right one enabled over
+[44:52] here. So now I'll be like, okay, I got
+[44:55] 300 of pizza today on my AMX. Okay,
+[45:01] [gasps]
+[45:02] just so so much pizza. Oh my gosh, I
+[45:06] never want to see pizza again after
+[45:08] this. All right, so it is deciding what
+[45:11] to do. what to do here
+[45:15] and it's decided what to do and we're
+[45:18] going to say allow and then what you can
+[45:20] see is it immediately popped me into the
+[45:22] file. Um so we are now in debugging mode
+[45:25] and in debugging mode you can see uh the
+[45:28] values of each variable as you go along.
+[45:30] So we can see what the values were of
+[45:32] each of the arguments as they came in
+[45:33] which is super cool. Uh we can see the
+[45:36] variables over here. We can you know dig
+[45:38] into them. We can watch variables if we
+[45:41] want to. So basically everything that
+[45:42] you expect out of a debugger, you know,
+[45:44] we can do that here, right? And now I
+[45:46] can step line by line. I can watch as
+[45:49] things change over time. I can jump
+[45:51] forward to the next breakpoint.
+[45:54] And uh yeah, so I'll just press continue
+[45:56] and let it finish. Uh so that's really
+[45:59] neat. I I always like to encourage
+[46:01] people to set up a um breakpoint
+[46:04] debugging so that it's easy to do
+[46:06] because here's the thing is that when
+[46:07] you actually run into a bug, you're
+[46:10] going to be like too frustrated to be
+[46:12] able to set up breakpoint debugging at
+[46:14] that point because it does require a
+[46:15] little bit of setup. So I always think
+[46:16] you should set it up like with your, you
+[46:18] know, launch.json JSON and configuration
+[46:20] like get it all set up when you're in a
+[46:22] good mood so that when when you're
+[46:24] dealing with a bug, you can use
+[46:27] breakpoint debugging and it's already
+[46:29] set up for you.
+[46:32] Okay, so that was breakpoint debugging.
+[46:34] I'll detach from that now. I'll stop
+[46:37] this server. Um I'll go ahead and
+[46:40] restart the HTTP server
+[46:44] and let's see what else we can do. Uh so
+[46:47] here's another helpful tool. This is
+[46:49] called the MCP inspector. It is a user
+[46:53] interface that uh makes it easy to
+[46:56] interact with MCP servers, you know,
+[46:59] without having going through an agent in
+[47:00] front, right? Like I've been demoing
+[47:02] everything with, you know, GitHub
+[47:03] copilot, but that's adding, you know,
+[47:05] another layer on top, which is the, you
+[47:07] know, the co-pilot agent and LLM, right?
+[47:10] you might want to just directly play
+[47:12] with your server um using this this uh
+[47:15] inspector here. So, we're going to
+[47:19] uh start up the inspector,
+[47:24] and I'll just go. We also have all this
+[47:27] described in the read me, too. So, I'm
+[47:28] just going to go to the read me to make
+[47:30] sure I follow the right steps.
+[47:35] So, we've got the server running and
+[47:37] then I'm going to run this inspector.
+[47:40] Here we go.
+[47:43] Need to install. It must have just
+[47:46] released today. I installed the latest
+[47:47] version like last night. All right.
+[47:50] There's a new version. Great. Good.
+[47:52] Okay. So, now it starts up. We're going
+[47:54] to say connect. It is now connected to
+[47:57] my local host MCP server. And now you
+[48:00] can see I've got resources, prompts,
+[48:02] tools, sampling, elicitations, roots,
+[48:04] off, metadata, like all these different
+[48:06] aspects that your MCP server might
+[48:09] support. Uh, now the fun one of course
+[48:11] is tools. So we can see we have this add
+[48:14] expense function. And so we can go
+[48:16] through here and say, okay, it was 25
+[48:19] 1212. It was, you know, 365.
+[48:22] It was food and it was pizza. So tired
+[48:26] of No, we'll just say pizza. and it was
+[48:29] am. And then we're going to run the tool
+[48:32] and we can see success. Uh and you can
+[48:35] see a history of all the tool calls
+[48:36] here.
+[48:38] Uh so this is a handy way of uh you know
+[48:41] working with your MCP server when you're
+[48:44] developing it and um you know just
+[48:46] having an interactive UI uh where you
+[48:50] can test it out.
+[48:55] So that's the MCP inspector. uh you can
+[48:58] check the readme uh for you know more
+[49:01] details on setting that up.
+[49:04] Now there was a question about
+[49:06] observability in the chat a few minutes
+[49:08] ago. So observability what does that
+[49:10] even mean? That means being able to see
+[49:12] what our servers are doing like seeing
+[49:14] the requests that come into them, seeing
+[49:16] their log, seeing like the fact that
+[49:18] they made an request to another service
+[49:21] like a dependency, right? So we call
+[49:23] that all of that observability, right?
+[49:25] And it's usually a combination of logs,
+[49:27] traces and metrics. Um, and we use this
+[49:30] standard called open telemetry uh which
+[49:32] is uh all these standards around how we
+[49:36] observe our applications. Now, we're
+[49:38] going to talk a lot about observability
+[49:40] in tomorrow's session. Uh because
+[49:42] observability is so important when you
+[49:44] put servers into production because you
+[49:46] want to know what the heck your servers
+[49:47] are doing and how people are using them.
+[49:49] Uh but you can also set up observability
+[49:52] with open telemetry locally as well. So,
+[49:55] we're going to do that using Aspire.
+[49:57] Aspire actually comes from the .NET
+[49:58] community, but they are trying to bring
+[50:00] in the Python community as well. So,
+[50:02] that's why we've set it up today so you
+[50:03] can check it out. Uh so uh the way we're
+[50:07] going to do that is let me quit the
+[50:09] inspector. Uh so first we need to start
+[50:12] the Aspire dashboard and this is just a
+[50:14] docker container. So I'm going to do
+[50:17] docker run and uh I need to start up my
+[50:21] docker. So let me start up docker
+[50:25] locally.
+[50:27] And uh here we go. We can see the little
+[50:30] whale is starting up here.
+[50:34] And
+[50:36] it's installing an update. Not the right
+[50:39] time. Don't do it. Okay. All right. So,
+[50:41] we've got Docker running. And so, now
+[50:43] I'm going to run Docker run. All right.
+[50:44] So, now it's running. So, if we look at
+[50:46] Docker, you can see I do now have the
+[50:47] Aspire dashboard running. And it's
+[50:49] running on this port here.
+[50:52] And then we're going to get the um the
+[50:56] link to the dashboard. So, I'm going to
+[50:58] open that up here. So, there's the
+[50:59] dashboard. This is a locally running
+[51:01] dashboard.
+[51:03] And then we're going to make sure that
+[51:05] our server is exporting to that
+[51:08] endpoint. So I'm just adding this
+[51:10] endpoint to my MV.
+[51:16] And then I'm going to run the server.
+[51:17] And if you look at the server, you can
+[51:19] see at the top we do actually check to
+[51:22] see if that
+[51:24] m variable is defined. And if so, we set
+[51:27] up the Aspire dashboard and we use some
+[51:31] middleware in order to trace the open
+[51:33] telemetry. So, we will talk more about
+[51:35] that middleware tomorrow. Um, but we
+[51:37] wanted to show Aspire for the local use
+[51:39] case today. All right. So, now I'm going
+[51:42] to restart the server since we did
+[51:44] change that environment variable. And
+[51:46] so, I want to make sure it is restarting
+[51:48] with Aspire. So, we can see it's setting
+[51:50] up Aspire dashboard. Great. Okay. So now
+[51:54] it is running and uh let's check see. So
+[52:00] we've got our HTTP server running. We're
+[52:03] going to go over to Copilot
+[52:07] and check to see what's running over
+[52:09] here. Okay, let me put HTV server on and
+[52:14] let's see. I bought a $222
+[52:19] today on my Visa. All right. So, we're
+[52:23] hoping that it's going to send this call
+[52:26] out to the HTTP server.
+[52:31] [clears throat]
+[52:33] Okay. And we can see there's already a
+[52:35] log that says the server was starting.
+[52:36] So, we can see that the Spire dashboard
+[52:38] is already getting uh at least the logs
+[52:41] from the application. All right. And it
+[52:42] wants to call the HP servers. That's
+[52:44] good. We're going to say allow. And then
+[52:46] we're going to go back here and boom. So
+[52:49] here we can see the log that came from
+[52:51] logger.info. But what's really cool is
+[52:53] that there's an attached trace. So we
+[52:55] can click on this trace and this is a
+[52:59] open telemetry trace and it has all this
+[53:02] additional information here all this
+[53:04] metadata uh that came from uh from the
+[53:07] tool call, right? Uh so you can add all
+[53:10] sorts of uh logging and traces when
+[53:13] you're using um when you're adding
+[53:16] observability to your app. And we'll dig
+[53:18] we'll add even more to this in
+[53:19] tomorrow's session.
+[53:23] All right. So now you've seen how to
+[53:26] build fast MCB servers locally using
+[53:29] both standard input output and HTTP and
+[53:32] our favorite debugging tips and
+[53:34] developing tips forum. Now, we want to
+[53:37] show how you can point AI agents at
+[53:40] those MCP servers
+[53:43] because so far I've basically been using
+[53:46] GitHub Copilot as my AI agent, which is
+[53:48] great and that might be, you know, why
+[53:50] you're building your MCP server, but
+[53:52] many people are building MCB servers so
+[53:53] that they can use them as part of their
+[53:55] agent orchestration, as part of their
+[53:56] agentic workflows and um and have like
+[54:00] within a company, you might like expose
+[54:02] some functionality as an MCB server and
+[54:04] then you might have multiple agents in
+[54:05] that company that are interacting with
+[54:08] that server. So what does that look
+[54:09] like? We've got a couple examples for
+[54:11] you in the repo. Uh the first example is
+[54:14] using Microsoft agent framework. That is
+[54:16] the our newest AI agent framework and it
+[54:19] is the successor to autogen and semantic
+[54:21] kernel. So if you were using autogen or
+[54:23] semantic kernel, you should move on over
+[54:25] to agent framework. It's got everything
+[54:28] basically everything from those plus way
+[54:30] more. And it does have built-in support
+[54:32] for MCB servers. uh basically using them
+[54:34] for tools for an agent. Uh so we have a
+[54:37] full example in the repo which is this
+[54:41] under in the agents folder you see this
+[54:43] agent framework/hp.
+[54:45] So you can see this brings in the agent
+[54:48] framework and then it connects. Now we
+[54:51] need an LLM because we're actually you
+[54:53] know we're making an agent. The agent
+[54:54] needs an LM to decide which tools to
+[54:56] call. Uh so here we've got support. You
+[54:58] can either connect it to Azure and
+[54:59] that's what I'm doing because I've got
+[55:00] it deployed to Azure endpoint or you can
+[55:03] use GitHub models as long as the model
+[55:05] supports tool calling or you can use O
+[55:07] Lama as long as the model supports tool
+[55:10] calling which that's a harder harder
+[55:12] task but there are some good ones. I
+[55:15] think also Quen and Gemma would be ones
+[55:17] to try or you can use openi.com right so
+[55:20] you can configure these agents to use
+[55:22] your LLM's choice as long as they
+[55:25] support tool calling. Uh then we set up
+[55:27] the MCP connection here. So we say all
+[55:30] right here's the server, here's the URL.
+[55:32] Um this URL is defaulting to the local
+[55:35] host URL. But we could also point it as
+[55:37] a production deployment version if we
+[55:39] need to uh as we will soon in the next
+[55:42] sessions. Then we set up an agent and
+[55:44] say okay this is our agent. This is the
+[55:46] system prompt for the agent. And uh and
+[55:49] then when we run the agent, we're going
+[55:51] to give it a, you know, give it access
+[55:55] to those MCP server tools, right? Say,
+[55:57] okay, here's the query. Here are the
+[55:59] tools you can use. How are you going to
+[56:01] use those tools to answer this query?
+[56:04] So, let's go ahead and run run this
+[56:09] example here
+[56:12] and see how it does.
+[56:21] All right.
+[56:24] So, right now it should be sending all
+[56:27] this information, you know, connecting
+[56:29] to the LM, sending this information to
+[56:32] the LLM. And, uh, interestingly, it um,
+[56:36] it actually it wasn't sure how to
+[56:40] categorize
+[56:42] the um, the laptop purchase. And so it
+[56:46] actually asked me, would you like to log
+[56:47] it this way? So it actually didn't log
+[56:49] it because it was so unsure, which is
+[56:51] interesting because last time it was
+[56:52] fine. Um
+[56:55] uh I'll just I'll just give it more
+[56:56] information. So that's like normally
+[56:57] when you're using agents, you're
+[56:59] typically going to have them uh you know
+[57:01] having some sort of a human in the loop
+[57:03] or some sort of way that you can give
+[57:04] feedback to the agents about whether you
+[57:06] know it's done the the correct thing.
+[57:10] And uh and then we'll log it again. So
+[57:13] uh we'll see if this time it understands
+[57:16] well enough to do it. So there we go. So
+[57:18] this time it successfully logged it
+[57:20] under you know the gadget category and
+[57:23] we can see it is in that CSV.
+[57:28] Uh so so yeah so here I was able to use
+[57:31] that and the cool thing this is is that
+[57:33] you could you know I saw a question can
+[57:34] you have multiple you know multiple
+[57:36] tools multiple MCU servers? Yeah. So
+[57:38] this is, you know, here I'm just giving
+[57:40] it access to one MCB server and that MCP
+[57:42] server has one tool, but your server can
+[57:44] have multiple tools. You can give it
+[57:46] access to multiple MCB servers, right?
+[57:48] You can do all of that because you can
+[57:50] send like hundreds of tool call
+[57:51] definitions to an LM like as long as it
+[57:53] has a big enough context window for it.
+[57:55] Now, you do always risk that the more
+[57:58] tool call definitions you send, the more
+[58:00] likely an LM is to get confused. So you
+[58:02] do want to make sure it's like really
+[58:04] unambiguous what each tool does, but you
+[58:06] do totally have that option.
+[58:08] Uh now we also have a lang chain example
+[58:10] and that's quite similar um you know
+[58:12] it's setting up the the connection it's
+[58:16] connecting to the uh to the MCB server
+[58:21] uh it's passing the tools into the agent
+[58:23] and then it's sending the same query to
+[58:25] the agent. Uh so here let me run this
+[58:29] one.
+[58:31] Uh let's see this HTTP. Okay, so we just
+[58:34] want to show that you know basically if
+[58:36] you're using an agent framework all the
+[58:39] modern agent frameworks have built-in
+[58:40] support for MCP where they basically
+[58:42] they're acting as an MCP client right
+[58:44] you can see here it actually calls it's
+[58:46] you know calls itself a client right so
+[58:48] the agents can act as a client they
+[58:49] connect to servers and they have ways of
+[58:52] passing you know some some way of
+[58:55] passing the MCB servers tools to the
+[58:57] agent so here you can see that link
+[58:59] chain successfully logged it as well so
+[59:02] now we should see another laptop
+[59:05] purchase here.
+[59:07] So there we go.
+[59:10] And that brings me to the final slide
+[59:13] right in time. Uh that is what I wanted
+[59:16] to show today for our first session of
+[59:19] the series. Uh we do have in a few hours
+[59:22] there's going to be a Spanish version of
+[59:24] this session. Uh so if you do speak
+[59:26] Spanish or have any friends that do,
+[59:28] Gwen will be leading that session,
+[59:29] please point them to it. Uh the
+[59:31] recording for this will be on YouTube uh
+[59:34] pretty much immediately so you can
+[59:36] rewatch it or or share it. Uh we'll also
+[59:39] be linking all of the resources from
+[59:41] this um this thread here, this link
+[59:44] here, this Python MCPresources link.
+[59:46] That's where I'll put all the slides,
+[59:48] recordings, code samples, etc.
+[59:51] And um we have this tutorial that our
+[59:56] colleague wrote Chris MCP for beginners
+[59:59] that you can go through as well if you
+[01:00:01] want another way of learning after this
+[01:00:03] series. And every single day of this
+[01:00:06] week, we are running office hours after
+[01:00:08] the session, which means when I close
+[01:00:12] this stream here, I'm going to hop into
+[01:00:15] Discord and start up an office hour
+[01:00:17] sessions because I know there were lots
+[01:00:19] of questions that we didn't get to. And
+[01:00:22] uh and so for this week, after every
+[01:00:24] single session, we are going to be
+[01:00:26] running Discord office hours to try and
+[01:00:28] tackle as many questions as we can. Uh
+[01:00:31] so basically I will end this YouTube
+[01:00:34] session and then jump over to the
+[01:00:36] discord and uh hope to see lots of you
+[01:00:40] there with all your questions.
+[01:00:44] All right,
+[01:00:46] thank you so much everyone. Uh thank you
+[01:00:48] so much for joining and I do hope to see
+[01:00:52] you in the discord. Uh just double check
+[01:00:55] that we're put the link in the chat.
+[01:00:59] Let's see. Can we get the link in the
+[01:01:01] chat? Do we get it here? We also flash
+[01:01:03] it up on the screen.
+[01:01:08] We'll make sure it's it's it'll be there
+[01:01:10] soon. It's also linked from the um
+[01:01:13] resources. I link to that just
+[01:01:15] everywhere. If you go to my GitHub,
+[01:01:16] you'll always find the office hours
+[01:01:17] there because we always hold office
+[01:01:19] hours every week, but this week is a
+[01:01:21] special week where we have Discord
+[01:01:22] office hours every single day of the
+[01:01:24] week.
+[01:01:27] All right. And I see the link is in the
+[01:01:29] chat. All right, so we are good to close
+[01:01:31] it up here and head on over to Discord.
+[01:01:36] Thank you everyone for all the kind
+[01:01:37] words in the chat. That seems like that
+[01:01:40] you like the session. That's awesome.
+[01:01:42] And I hope to see you for office hours.
+[01:01:45] Bye everyone.
+[01:01:56] Thank you all for joining and thanks
+[01:01:58] again to our speakers.
+[01:02:00] This session is part of a series. To
+[01:02:03] register for future shows and watch past
+[01:02:05] episodes on demand, you can follow the
+[01:02:07] link on the screen or in the chat.
+[01:02:11] We're always looking to improve our
+[01:02:13] sessions and your experience. If you
+[01:02:15] have any feedback for us, we would love
+[01:02:17] to hear what you have to say. You can
+[01:02:19] find that link on the screen or in the
+[01:02:21] chat and we'll see you at the next one.
+[01:02:37] [music]
+[01:02:45] >> [music]
+[01:02:51] [music]
+[01:03:01] >> Dup.
+[01:03:07] [music]

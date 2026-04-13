@@ -1,0 +1,13 @@
+{
+	"servers": {
+		"hugging-face-server": {
+			"url": "https://huggingface.co/mcp",
+			"type": "http"
+		},
+        "product-store": {
+            "type": "http",
+            "url": "http://localhost:8420/mcp"
+        }
+	},
+	"inputs": []
+}

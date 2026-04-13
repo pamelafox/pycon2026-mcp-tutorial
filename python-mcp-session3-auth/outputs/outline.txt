@@ -1,0 +1,44 @@
+1. Series title slide listing all three sessions: Building, Deploying, and Authentication for MCP servers.
+2. Python + MCP series overview with the three session topics highlighted.
+3. Title slide for "Authentication for MCP servers" by Pamela Fox, Python Cloud Advocate.
+4. Agenda slide listing topics: restricting access, key-based access, OAuth-based access, Keycloak integration, Entra integration.
+5. Section divider: "Restricting MCP server access."
+6. Recap of MCP architecture showing clients communicating with servers that expose tools, prompts, and resources.
+7. Three approaches to restricting MCP server access: private network, key-based access, and OAuth-based access.
+8. Section divider: "Key-based access."
+9. Key-based access flow diagram showing an API key sent in headers from MCP client to server.
+10. VS Code configuration for Tavily MCP server with key-based access using password input for secure key storage.
+11. Code examples for specifying a key in AI agent frameworks: agent-framework and langchain.
+12. Two Azure options for deploying key-based access: Azure Functions (basic) and Azure API Management (scalable).
+13. Steps to deploy an Azure Function with key access using the mcp-sdk-functions-hosting-python repo.
+14. Demo slide showing VS Code mcp.json configuration for a deployed Azure Function with key-based access.
+15. Section divider: "OAuth-based access."
+16. OAuth-based access flow diagram showing MCP client sending a bearer authorization access token to get user-specific results.
+17. OAuth 2.1 overview diagram showing the four entities: authorization server, OAuth client (MCP client), resource server (MCP server), and resource owner.
+18. Simplified OAuth flow for MCP: sequence diagram from user initiation through authorization to authenticated results.
+19. Authorization server discovery overview: PRM for finding the authorization server, then AS metadata or OIDC discovery.
+20. PRM flow diagram showing two options: WWW-Authenticate header or well-known PRM URLs.
+21. FastMCP automatically adds PRM routes when an auth provider is configured.
+22. Authorization server metadata discovery flow showing well-known URL patterns tried by the MCP client.
+23. Revisited OAuth flow for MCP highlighting the client registration validation step.
+24. Decision tree for client validation: pre-registration, CIMD (preferred), or DCR (legacy fallback).
+25. CIMD document format example and link to VS Code's CIMD at vscode.dev.
+26. CIMD flow sequence diagram showing how the authorization server fetches and validates the client metadata URL.
+27. DCR flow sequence diagram showing dynamic client registration followed by standard OAuth 2.1 flow.
+28. Comparison table of authorization provider support for AS metadata discovery, CIMD, and DCR across providers.
+29. FastMCP OAuth provider class hierarchy: OAuthProvider splits into RemoteAuthProvider (DCR support) and OAuthProxy (no DCR).
+30. Section divider: "Remote OAuth with full DCR support."
+31. Code example using ScaleKit provider with FastMCP for easy fully-compliant OAuth setup.
+32. Keycloak introduction as an open-source OAuth 2.1 compliant identity server deployable via Docker.
+33. Code for integrating Keycloak with FastMCP using a custom RemoteAuthProvider subclass to work around DCR bugs.
+34. Steps to deploy the example server with Keycloak using azd CLI.
+35. Demo slide: Using authenticated server in VS Code with Keycloak user login screen.
+36. Section divider: "Entra via OAuth Proxy."
+37. Entra support via OAuth Proxy architecture diagram showing FastMCP OAuth Proxy with database for client ID storage.
+38. Code for integrating Entra with FastMCP using AzureProvider and Cosmos DB for client storage.
+39. Steps to deploy the example server with Entra OAuth Proxy using azd CLI.
+40. Demo slide: Using authenticated server in VS Code with FastMCP OAuth proxy screen.
+41. Alternative approach: only support pre-registered clients with known client IDs like VS Code.
+42. Steps to deploy Azure Function with pre-registered client IDs for Entra authentication.
+43. Next steps slide with links to past recordings, office hours, and MCP for Beginners course.
+44. On-behalf-of flow diagram showing Microsoft Entra, FastMCP OAuth Proxy, and Microsoft Graph API.
