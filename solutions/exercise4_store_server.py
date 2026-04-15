@@ -2,10 +2,10 @@ import logging
 from typing import Annotated
 
 from fastmcp import Context, FastMCP
-from pydantic import BaseModel, Field
 from prefab_ui.app import PrefabApp
 from prefab_ui.components import Badge, Card, CardContent, Column, Grid, Heading, Separator, Text
 from prefab_ui.components.charts import BarChart, ChartSeries
+from pydantic import BaseModel, Field
 
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s - %(message)s")
 logger = logging.getLogger("StoreMCP")

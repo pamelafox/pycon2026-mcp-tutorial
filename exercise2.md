@@ -104,16 +104,16 @@ import asyncio
 import os
 
 from agent_framework import Agent, MCPStreamableHTTPTool
-from agent_framework.openai import OpenAIResponsesClient
+from agent_framework.openai import OpenAIChatClient
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
 # TODO: Configure the OpenAI client for your chosen provider.
 # For OpenAI:
-client = OpenAIResponsesClient(
+client = OpenAIChatClient(
     api_key=os.environ["OPENAI_API_KEY"],
-    model_id=os.getenv("OPENAI_MODEL", "gpt-5.4"),
+    model=os.getenv("OPENAI_MODEL", "gpt-5.4"),
 )
 
 
