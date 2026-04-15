@@ -17,7 +17,7 @@ logger.setLevel(logging.INFO)
 auth = KeycloakAuthProvider(
     realm_url="REPLACE_WITH_INSTRUCTOR_REALM_URL",
     base_url="http://localhost:8420",
-    required_scopes=["openid"],
+    required_scopes=["openid", "mcp:access"],
     audience="REPLACE_WITH_INSTRUCTOR_AUDIENCE",
 )
 

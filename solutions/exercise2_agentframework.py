@@ -2,7 +2,7 @@ import asyncio
 import os
 
 from agent_framework import Agent, MCPStreamableHTTPTool
-from agent_framework.openai import OpenAIResponsesClient
+from agent_framework.openai import OpenAIChatClient
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
@@ -10,22 +10,22 @@ load_dotenv(override=True)
 API_HOST = os.getenv("API_HOST", "azure")
 
 if API_HOST == "azure":
-    client = OpenAIResponsesClient(
+    client = OpenAIChatClient(
         base_url=f"{os.environ['AZURE_OPENAI_ENDPOINT']}/openai/v1/",
         api_key=os.environ["AZURE_OPENAI_KEY"],
-        model_id=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"],
+        model=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT"],
     )
 elif API_HOST == "ollama":
-    client = OpenAIResponsesClient(
+    client = OpenAIChatClient(
         base_url=os.environ.get("OLLAMA_ENDPOINT", "http://localhost:11434/v1"),
         api_key=os.getenv("OLLAMA_API_KEY", "no-key-needed"),
-        model_id=os.environ.get("OLLAMA_MODEL", "gemma4:e4b"),
+        model=os.environ.get("OLLAMA_MODEL", "gemma4:e4b"),
     )
 elif API_HOST == "openai":
-    client = OpenAIResponsesClient(
+    client = OpenAIChatClient(
         api_key=os.environ["OPENAI_API_KEY"],
         base_url=os.getenv("OPENAI_BASE_URL"),
-        model_id=os.getenv("OPENAI_MODEL", "gpt-5.4"),
+        model=os.getenv("OPENAI_MODEL", "gpt-5.4"),
     )
 else:
     raise ValueError(f"Unsupported API_HOST '{API_HOST}'. Use one of: azure, ollama, openai.")

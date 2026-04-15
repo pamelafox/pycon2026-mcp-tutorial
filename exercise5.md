@@ -36,7 +36,7 @@ from fastmcp.server.auth.providers.keycloak import KeycloakAuthProvider
 auth = KeycloakAuthProvider(
     realm_url="________",  # TODO: Paste the Keycloak Realm URL from the table above
     base_url="http://localhost:8420",
-    required_scopes=["openid"],
+    required_scopes=["openid", "mcp:access"],
     audience="________",  # TODO: Paste the audience from the table above
 )
 ```
@@ -82,7 +82,7 @@ When you ask Copilot to use a tool on this server:
 
 Try asking:
 
-> "What products are in the store?"
+> "Buy a product from the store"
 
 You should see the normal response, but now it went through the full OAuth flow first. Check your server's terminal output — you'll see the 401, the token exchange, and then the authenticated 200.
 
@@ -125,7 +125,7 @@ mcp = FastMCP("Your Store Name", auth=auth, middleware=[UserAuthMiddleware()])
 
 **4. Update `buy_product` to use the user ID:**
 
-Add `ctx: Context` as a parameter to your `buy_product` tool, then extract and use the user ID:
+If you didn't add `ctx: Context` in Exercise 4, add it now. Then extract and use the user ID:
 
 ```python
 @mcp.tool
