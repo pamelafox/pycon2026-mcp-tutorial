@@ -34,6 +34,12 @@ Run a local LLM on your machine using [Ollama](https://ollama.com/). No API key 
    OLLAMA_MODEL=gemma4:e4b
    ```
 
+    If you're using the repository Dev Container, also add:
+
+    ```text
+    OLLAMA_ENDPOINT=http://host.docker.internal:11434/v1
+    ```
+
 > **Note:** Ollama runs entirely on your machine. A model like `gemma4:e4b` needs ~32 GB of RAM. If your machine has has less RAM, try `llama3.1:8b` instead.
 
 ### Option 2: OpenRouter
